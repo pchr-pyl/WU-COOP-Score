@@ -1,51 +1,72 @@
 import Link from "next/link";
+import { Atom, Globe, Lightbulb, UsersRound } from "lucide-react";
 
 const routes = [
   {
     href: "/sci-tech",
     title: "วิทยาศาสตร์และเทคโนโลยี",
-    desc: "แบบประเมินด้าน Science & Technology",
+    icon: Atom,
+    featured: true,
   },
   {
     href: "/social-huma",
     title: "สังคมศาสตร์ มนุษยศาสตร์",
-    desc: "แบบประเมินด้าน Social Sciences & Humanities",
+    icon: UsersRound,
+    featured: false,
   },
   {
     href: "/innovation",
     title: "นวัตกรรมดีเด่น",
-    desc: "แบบประเมินด้าน Innovation",
+    icon: Lightbulb,
+    featured: false,
   },
   {
     href: "/inter",
     title: "นานาชาติดีเด่น",
-    desc: "แบบประเมินด้าน International Achievement",
+    icon: Globe,
+    featured: false,
   },
 ];
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#f8f9fa] text-[#191c1d] px-4 py-16 md:px-6">
-      <div className="mx-auto max-w-5xl space-y-10">
+    <main className="min-h-screen bg-[#ebecef] text-[#111315] px-5 py-14 md:px-6 md:py-20">
+      <div className="mx-auto max-w-[760px] space-y-8 md:space-y-10">
         <header className="space-y-4 text-center">
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight">WU COOP Score System</h1>
-          <p className="text-sm md:text-base text-[#191c1d]/60">เลือกรูปแบบการประเมินตามประเภทผลงานสหกิจ</p>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">เลือกประเภท</h1>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
           {routes.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-3xl bg-white p-6 md:p-7 shadow-sm hover:shadow-lg transition-all border border-[#f1f2f3]"
-            >
-              <div className="text-xs font-black tracking-[0.2em] uppercase text-[#5f00e3]/70">Path {item.href}</div>
-              <h2 className="mt-3 text-2xl font-bold">{item.title}</h2>
-              <p className="mt-2 text-sm text-[#191c1d]/60">{item.desc}</p>
-            </Link>
+            <CategoryCard key={item.href} href={item.href} title={item.title} featured={item.featured} Icon={item.icon} />
           ))}
         </div>
       </div>
     </main>
+  );
+}
+
+type CategoryCardProps = {
+  href: string;
+  title: string;
+  featured: boolean;
+  Icon: React.ComponentType<{ size?: number; className?: string }>;
+};
+
+function CategoryCard({ href, title, featured, Icon }: CategoryCardProps) {
+  return (
+    <Link
+      href={href}
+      className={[
+        "group rounded-2xl md:rounded-3xl px-6 py-7 md:px-8 md:py-8 shadow-sm transition-all border",
+        "min-h-[112px] flex flex-col items-center justify-center gap-3 md:gap-4",
+        featured
+          ? "bg-gradient-to-b from-[#7c1dff] to-[#5d00d2] text-white border-[#6e09e1]"
+          : "bg-[#f0f1f3] text-[#111315] border-[#eceef1] hover:bg-white hover:shadow-md",
+      ].join(" ")}
+    >
+      <Icon size={38} className={featured ? "text-white" : "text-[#2a2d31]"} />
+      <h2 className="text-3xl md:text-[2rem] font-semibold tracking-tight leading-tight text-center">{title}</h2>
+    </Link>
   );
 }
