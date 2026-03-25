@@ -165,6 +165,12 @@ export default function DashboardPage() {
             >
               <Home size={15} /> หน้าหลัก
             </Link>
+            <Link
+              href="/judge-summary"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white shadow-sm text-sm font-medium hover:bg-[#f3f4f5] transition-colors"
+            >
+              <Users size={15} /> สรุปรายอาจารย์
+            </Link>
             <button
               onClick={fetchData}
               disabled={loading}

@@ -3,90 +3,105 @@
     "id": "J001",
     "name": "รศ.ดร.วัฒนพงศ์ เกิดทองมี",
     "dept": "สำนักวิชาวิศวกรรมศาสตร์และเทคโนโลยี",
+    "password": "j001",
     "categories": ["innovation"]
   },
   {
     "id": "J002",
     "name": "อาจารย์นิธิมา หนูหลง",
     "dept": "สำนักวิชาสาธารณสุขศาสตร์",
+    "password": "j002",
     "categories": ["innovation"]
   },
   {
     "id": "J003",
     "name": "ผศ.ดร.กนกวรรณ มีสุข",
     "dept": "สำนักวิชาการบัญชีและการเงิน",
+    "password": "j003",
     "categories": ["innovation"]
   },
   {
     "id": "J004",
     "name": "อาจารย์ปิยะ พละคช",
     "dept": "โรงเรียนท่าศาลาประสิทธิ์ศึกษา",
+    "password": "j004",
     "categories": ["innovation"]
   },
   {
     "id": "J005",
     "name": "ผศ.ดร.พิมพ์ชนก พิมพ์ทนต์",
     "dept": "สำนักวิชาวิทยาศาสตร์",
+    "password": "j005",
     "categories": ["innovation"]
   },
   {
     "id": "J006",
     "name": "คุณเกียรติศักดิ์ นิยมลาภ",
     "dept": "บริษัท สมบูรณ์แอ๊ดวานซ์เทคโนโลยี จำกัด (มหาชน)",
+    "password": "j006",
     "categories": ["sci-tech"]
   },
   {
     "id": "J007",
     "name": "รศ.ดร.วิภาวี เดชะปัญญา",
     "dept": "สำนักวิชาวิศวกรรมศาสตร์และเทคโนโลยี",
+    "password": "j007",
     "categories": ["sci-tech"]
   },
   {
     "id": "J008",
     "name": "ผศ.ดร.ประเสริฐ มากแก้ว",
     "dept": "สำนักวิชาสาธารณสุขศาสตร์",
+    "password": "j008",
     "categories": ["sci-tech"]
   },
   {
     "id": "J009",
     "name": "ผศ.ดร.จันทิรา รัตนรัตน์",
     "dept": "สำนักวิชาวิทยาศาสตร์",
+    "password": "j009",
     "categories": ["sci-tech"]
   },
   {
     "id": "J010",
     "name": "อาจารย์เกษม เศรษฐ์ทวิศานติ์",
     "dept": "โรงเรียนท่าศาลาประสิทธิ์ศึกษา",
+    "password": "j010",
     "categories": ["sci-tech"]
   },
   {
     "id": "J011",
     "name": "ผศ.ดร.รัชฎาทิพย์ อุปถัมภ์ประชา",
     "dept": "สำนักวิชารัฐศาสตร์และรัฐประศาสนศาสตร์",
+    "password": "j011",
     "categories": ["social-huma", "inter"]
   },
   {
     "id": "J012",
     "name": "ผศ.ดร.สุชิตา มานะจิตต์",
     "dept": "สำนักวิชาการบัญชีและการเงิน",
+    "password": "j012",
     "categories": ["social-huma", "inter"]
   },
   {
     "id": "J013",
     "name": "ผศ.ดิชิตชัย เมตตาริกานนท์",
     "dept": "สำนักวิชาสารสนเทศศาสตร์",
+    "password": "j013",
     "categories": ["social-huma", "inter"]
   },
   {
     "id": "J014",
     "name": "คุณพัชยา เถาว์แดง",
     "dept": "Cluster Learning Manager โรงแรม อนันตรา ลายัน ภูเก็ต รีสอร์ท",
+    "password": "j014",
     "categories": ["social-huma", "inter"]
   },
   {
     "id": "J015",
     "name": "ผศ.ดร.อาทิตยา นิตย์โชติ",
     "dept": "วิทยาลัยนานาชาติ มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตหาดใหญ่",
+    "password": "j015",
     "categories": ["social-huma", "inter"]
   }
 ]

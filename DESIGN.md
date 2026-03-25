@@ -8,9 +8,11 @@
 THE CENTER FOR COOPERATIVE EDUCATION AND CAREER DEVELOPMENT WALAILAK UNIVERSITY
 
 ### Logo Usage
-![COOP Logo](./voting-system/public/branding/coop-logo.png)
+![COOP Logo](./03-praduu-abbreviation.png)
 
-Active logo file: `voting-system/public/branding/coop-logo.png`
+Active logo file: `03-praduu-abbreviation.png`
+
+This logo is the primary identity mark for the WU COOP Score System and should be used on the homepage, login area, dashboard entry points, and important branded screens.
 
 ### Header Signature Block
 Use this exact signature on the homepage and major entry screens.
@@ -22,7 +24,11 @@ THE CENTER FOR COOPERATIVE EDUCATION AND CAREER DEVELOPMENT WALAILAK UNIVERSITY
 ### Asset Placement
 Place the logo file at:
 
-`voting-system/public/branding/coop-logo.png`
+`03-praduu-abbreviation.png`
+
+For implementation in the web application, keep a web-ready copy in:
+
+`public/branding/coop-logo.png`
 
 Then reference it in Next.js as:
 
