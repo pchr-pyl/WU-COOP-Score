@@ -1,11 +1,38 @@
-import { fetchDashboardData } from "@/lib/score-store/supabase";
+import { fetchDashboardData, createHeaders, buildRestUrl } from "@/lib/score-store/supabase";
 export type { DashboardData, ScoreRow, StudentSummary } from "@/lib/score-store/types";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const url = new URL(req.url);
+    const includeScores = url.searchParams.get('includeScores') === 'true';
+    const judgeId = url.searchParams.get('judgeId');
+
     const data = await fetchDashboardData();
+
+    // ถ้าต้องการข้อมูลคะแนนรายข้อ
+    if (includeScores && judgeId) {
+      // ดึงข้อมูลคะแนนรายข้อจาก Supabase
+      const detailedResponse = await fetch(
+        buildRestUrl("/score_submissions", `select=scores,student_id,student_name,category&judge_id=eq.${judgeId}`),
+        {
+          method: "GET",
+          headers: {
+            ...createHeaders(),
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (detailedResponse.ok) {
+        const detailedData = await detailedResponse.json();
+        return Response.json({
+          ...data,
+          detailedScores: detailedData || []
+        });
+      }
+    }
 
     return Response.json(data);
   } catch (error) {

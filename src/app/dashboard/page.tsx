@@ -81,9 +81,9 @@ function StudentRow({
         </p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-base font-bold tabular-nums">{student.avgPct.toFixed(1)}%</p>
+        <p className="text-base font-bold tabular-nums">{student.avgPct.toFixed(2)}%</p>
         <p className="text-xs text-[#191c1d]/45 tabular-nums">
-          {student.avgScore.toFixed(1)}/{student.maxScore}
+          {student.avgScore.toFixed(2)}/{student.maxScore}
         </p>
       </div>
     </div>
@@ -127,7 +127,7 @@ export default function DashboardPage() {
   const chartData = Object.entries(data?.byCategory ?? {}).map(([key, val]) => ({
     name: CATEGORY_LABELS[key] ?? key,
     count: val.count,
-    avgPct: parseFloat(val.avgPct.toFixed(1)),
+    avgPct: parseFloat(val.avgPct.toFixed(2)),
     color: CATEGORY_COLORS[key] ?? BAR_COLOR,
   }));
 
@@ -200,7 +200,7 @@ export default function DashboardPage() {
             label="เฉลี่ยรวม"
             value={
               data && data.rows.length > 0
-                ? `${(data.rows.reduce((s, r) => s + r.pct, 0) / data.rows.length).toFixed(1)}%`
+                ? `${(data.rows.reduce((s, r) => s + r.pct, 0) / data.rows.length).toFixed(2)}%`
                 : "—"
             }
             icon={TrendingUp}
@@ -305,7 +305,7 @@ export default function DashboardPage() {
                       <td className="py-1.5 pr-3 text-[#191c1d]/60">{CATEGORY_LABELS[r.category] ?? r.category}</td>
                       <td className="py-1.5 pr-3 text-[#191c1d]/60">{r.judgeName}</td>
                       <td className="py-1.5 pr-3 text-right tabular-nums">{r.totalScore}/{r.maxScore}</td>
-                      <td className="py-1.5 text-right tabular-nums font-semibold">{r.pct.toFixed(1)}%</td>
+                      <td className="py-1.5 text-right tabular-nums font-semibold">{r.pct.toFixed(2)}%</td>
                     </tr>
                   ))}
                 </tbody>

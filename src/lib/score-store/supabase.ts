@@ -45,7 +45,7 @@ type CategorySummaryRecord = {
   last_updated: string | null;
 };
 
-function createHeaders() {
+export function createHeaders() {
   const { serviceRoleKey } = getSupabaseServerConfig();
 
   return {
@@ -54,15 +54,11 @@ function createHeaders() {
   };
 }
 
-function buildRestUrl(path: string, query?: string) {
+export function buildRestUrl(path: string, query?: string) {
   const { url } = getSupabaseServerConfig();
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-
-  if (!query) {
-    return `${url}/rest/v1${normalizedPath}`;
-  }
-
-  return `${url}/rest/v1${normalizedPath}?${query}`;
+  const searchParams = query ? `?${query}` : "";
+  return `${url}/rest/v1${normalizedPath}${searchParams}`;
 }
 
 function mapSubmissionRecord(record: SubmissionRecord): ScoreRow {

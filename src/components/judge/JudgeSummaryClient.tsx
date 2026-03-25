@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ClipboardList, Home, RefreshCw, UserRound } from "lucide-react";
 import type { DashboardData, ScoreRow } from "@/lib/score-store/types";
 import { JUDGE_SESSION_STORAGE_KEY, type JudgeRecord } from "@/lib/judge-session";
+import { CATEGORY_CONFIG } from "@/lib/assessment-config";
 
 export default function JudgeSummaryClient() {
   const [judge, setJudge] = useState<JudgeRecord | null>(null);
@@ -48,6 +49,31 @@ export default function JudgeSummaryClient() {
 
   const totalScore = rows.reduce((sum, row) => sum + row.totalScore, 0);
   const uniqueStudents = new Set(rows.map((row) => `${row.studentId}::${row.category}`));
+
+  // ดึงข้อมูลคะแนนรายข้อจาก Supabase
+  const [detailedScores, setDetailedScores] = useState<any[]>([]);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  const fetchDetailedScores = async () => {
+    if (!judge) return;
+    
+    setLoadingDetails(true);
+    try {
+      const res = await fetch(`/api/dashboard?judgeId=${judge.id}&includeScores=true`);
+      if (res.ok) {
+        const data = await res.json();
+        setDetailedScores(data.detailedScores || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch detailed scores:', error);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDetailedScores();
+  }, [judge]);
 
   return (
     <main className="relative min-h-screen bg-[#f8f9fa] text-[#191c1d] px-4 py-8 sm:px-6 md:px-10 leading-[1.75] overflow-hidden">
@@ -136,7 +162,7 @@ export default function JudgeSummaryClient() {
                           <td className="py-2 pr-3 text-[#191c1d]/60">{row.categoryTitle}</td>
                           <td className="py-2 pr-3 text-[#191c1d]/60">{row.workplace}</td>
                           <td className="py-2 pr-3 text-right tabular-nums font-semibold">{row.totalScore}/{row.maxScore}</td>
-                          <td className="py-2 text-right tabular-nums font-semibold">{row.pct.toFixed(1)}%</td>
+                          <td className="py-2 text-right tabular-nums font-semibold">{row.pct.toFixed(2)}%</td>
                         </tr>
                       ))}
                     </tbody>
@@ -144,6 +170,72 @@ export default function JudgeSummaryClient() {
                 </div>
               )}
             </section>
+
+            {/* รายละเอียดคะแนนแต่ละข้อ */}
+            {detailedScores.length > 0 && (
+              <section className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)]">
+                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                  <h2 className="text-base font-bold">รายละเอียดคะแนนแต่ละข้อ</h2>
+                  <p className="text-xs text-[#191c1d]/45">แสดงคะแนนที่อาจารย์ให้ในแต่ละข้อ</p>
+                </div>
+
+                {loadingDetails && <div className="py-10 text-center text-sm text-[#191c1d]/40 animate-pulse">กำลังโหลดข้อมูลคะแนน...</div>}
+                
+                {!loadingDetails && (
+                  <div className="space-y-4">
+                    {detailedScores.map((submission, idx) => (
+                      <div key={idx} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h3 className="font-semibold text-sm">{submission.student_name} ({submission.student_id})</h3>
+                            <p className="text-xs text-gray-500">{submission.category}</p>
+                          </div>
+                        </div>
+                        
+                        {submission.scores && typeof submission.scores === 'object' && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {Object.entries(submission.scores).map(([questionId, score]) => {
+                              // หาข้อความของคำถามจาก config
+                              const categoryConfig = CATEGORY_CONFIG[submission.category as keyof typeof CATEGORY_CONFIG];
+                              let questionText = questionId;
+                              
+                              if (categoryConfig) {
+                                for (const topic of categoryConfig.topics) {
+                                  const question = topic.questions.find(q => q.id === questionId);
+                                  if (question) {
+                                    // แยกเฉพาะส่วนแรกของคำถาม (แค่ 5-6 คำแรก)
+                                    const words = question.text.split(' ');
+                                    questionText = words.slice(0, 6).join(' ');
+                                    break;
+                                  }
+                                }
+                              }
+                              
+                              return (
+                                <div key={questionId} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                  <div className="flex justify-between items-center gap-3">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-xs font-medium text-gray-700 truncate" title={questionText}>
+                                        {questionText}
+                                      </div>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                      <span className="inline-flex items-center justify-center w-10 h-10 bg-white rounded-full border-2 border-[#9f4200] text-sm font-bold text-[#9f4200]">
+                                        {score as number}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
           </>
         )}
       </div>
