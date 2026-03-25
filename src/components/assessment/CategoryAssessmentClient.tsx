@@ -12,7 +12,14 @@ import {
   Send,
   User,
 } from "lucide-react";
-import { CategoryConfig, CategoryKey, JUDGES, Judge } from "@/lib/assessment-config";
+import { CategoryConfig, CategoryKey } from "@/lib/assessment-config";
+
+type Judge = {
+  id: string;
+  name: string;
+  dept: string;
+  categories: CategoryKey[];
+};
 
 type Student = {
   id: string;
@@ -33,7 +40,9 @@ type Props = {
 
 export default function CategoryAssessmentClient({ config }: Props) {
   const [students, setStudents] = useState<Student[]>([]);
+  const [judges, setJudges] = useState<Judge[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
+  const [loadingJudges, setLoadingJudges] = useState(true);
   const [step, setStep] = useState(0);
   const [selectedJudge, setSelectedJudge] = useState<Judge | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -65,6 +74,36 @@ export default function CategoryAssessmentClient({ config }: Props) {
       alive = false;
     };
   }, [config.key]);
+
+  useEffect(() => {
+    let alive = true;
+    const run = async () => {
+      try {
+        const res = await fetch("/judges.json", { cache: "force-cache" });
+        if (!res.ok) {
+          throw new Error("โหลดรายชื่อกรรมการไม่สำเร็จ");
+        }
+        const all: Judge[] = await res.json();
+        if (!alive) return;
+        setJudges(all);
+      } catch {
+        if (!alive) return;
+        setJudges([]);
+      } finally {
+        if (alive) setLoadingJudges(false);
+      }
+    };
+
+    run();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const availableJudges = useMemo(
+    () => judges.filter((judge) => judge.categories.includes(config.key)),
+    [judges, config.key],
+  );
 
   const totalSteps = config.topics.length + 3;
   const summaryStep = totalSteps - 1;
@@ -161,7 +200,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
 
   const surfaceBase = "bg-[#f8f9fa] min-h-screen text-[#191c1d] antialiased leading-[1.8]";
   const focusCard =
-    "bg-white p-8 md:p-12 rounded-[1.5rem] shadow-[0_20px_40px_rgba(25,28,29,0.04)] max-w-4xl mx-auto transition-all duration-500 relative";
+    "bg-white p-5 sm:p-7 md:p-12 rounded-[1.25rem] md:rounded-[1.5rem] shadow-[0_20px_40px_rgba(25,28,29,0.04)] max-w-4xl mx-auto transition-all duration-500 relative";
   const primaryBtn =
     "bg-gradient-to-br from-[#9f4200] to-[#fe6c00] text-white px-6 py-3 rounded-full font-medium hover:scale-105 transition-transform flex items-center gap-2 disabled:opacity-30 disabled:hover:scale-100";
   const secondaryBtn =
@@ -175,7 +214,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
       />
 
       {step >= topicStartStep && (
-        <nav className="fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-40 bg-white/90 backdrop-blur-xl p-2 rounded-full shadow-lg flex gap-1 items-center border border-white/50 max-w-[95vw] overflow-x-auto">
+        <nav className="fixed top-3 md:top-6 left-1/2 -translate-x-1/2 z-40 bg-white/90 backdrop-blur-xl p-2 rounded-full shadow-lg flex gap-1 items-center border border-white/50 max-w-[95vw] overflow-x-auto">
           {config.topics.map((t, idx) => {
             const topicStep = idx + topicStartStep;
             const isActive = step === topicStep;
@@ -184,7 +223,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
               <button
                 key={t.id}
                 onClick={() => setStep(topicStep)}
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all relative shrink-0 ${
+                className={`w-11 h-11 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all relative shrink-0 ${
                   isActive
                     ? "bg-[#5f00e3] text-white scale-105 shadow-md"
                     : isDone
@@ -192,40 +231,45 @@ export default function CategoryAssessmentClient({ config }: Props) {
                       : "bg-transparent text-[#191c1d]/30 hover:bg-[#f3f4f5]"
                 }`}
               >
-                {isDone && !isActive ? <Check size={14} /> : <span className="text-xs font-bold">{idx + 1}</span>}
+                {isDone && !isActive ? <Check size={16} /> : <span className="text-sm font-bold">{idx + 1}</span>}
               </button>
             );
           })}
           <div className="w-px h-6 bg-[#f3f4f5] mx-1" />
           <button
             onClick={() => setStep(summaryStep)}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all shrink-0 ${
+            className={`w-11 h-11 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
               step === summaryStep ? "bg-[#9f4200] text-white" : "text-[#191c1d]/30 hover:bg-[#f3f4f5]"
             }`}
           >
-            <LayoutGrid size={17} />
+            <LayoutGrid size={18} />
           </button>
         </nav>
       )}
 
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-24">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 pb-14 md:py-24">
         {step === 0 && (
-          <div className="space-y-10">
+          <div className="space-y-8 md:space-y-10">
             <header className="space-y-3">
               <span className="text-[#5f00e3] uppercase tracking-[0.2em] text-xs font-bold opacity-60">Step 01</span>
-              <h1 className="text-3xl md:text-6xl font-bold tracking-tight">เลือกกรรมการผู้ประเมิน</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-6xl font-bold tracking-tight">เลือกกรรมการผู้ประเมิน</h1>
               <p className="text-sm md:text-base text-[#191c1d]/60">{config.title} | {config.subtitle}</p>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {JUDGES.map((j) => (
+            {loadingJudges ? (
+              <div className="bg-white rounded-3xl p-8 shadow-sm">กำลังโหลดรายชื่อกรรมการ...</div>
+            ) : availableJudges.length === 0 ? (
+              <div className="bg-white rounded-3xl p-8 shadow-sm text-[#191c1d]/60">ไม่พบรายชื่อกรรมการสำหรับประเภทนี้</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {availableJudges.map((j) => (
                 <button
                   key={j.id}
                   onClick={() => {
                     setSelectedJudge(j);
                     setStep(1);
                   }}
-                  className={`text-left p-6 rounded-[1.25rem] transition-all ${
+                  className={`text-left p-5 sm:p-6 rounded-[1.1rem] sm:rounded-[1.25rem] transition-all ${
                     selectedJudge?.id === j.id ? "bg-[#5f00e3] text-white" : "bg-[#f3f4f5] hover:bg-white hover:shadow-xl"
                   }`}
                 >
@@ -233,17 +277,18 @@ export default function CategoryAssessmentClient({ config }: Props) {
                   <div className="text-lg font-bold mb-1">{j.name}</div>
                   <div className={`text-sm opacity-70 ${selectedJudge?.id === j.id ? "text-white" : "text-[#191c1d]"}`}>{j.dept}</div>
                 </button>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {step === 1 && (
-          <div className="space-y-10">
+          <div className="space-y-8 md:space-y-10">
             <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
               <header className="space-y-3">
                 <span className="text-[#5f00e3] uppercase tracking-[0.2em] text-xs font-bold opacity-60">Step 02</span>
-                <h1 className="text-3xl md:text-6xl font-bold tracking-tight">เลือกนักศึกษา</h1>
+                <h1 className="text-2xl sm:text-3xl md:text-6xl font-bold tracking-tight">เลือกนักศึกษา</h1>
               </header>
               <button onClick={() => setStep(0)} className="text-sm text-[#5f00e3] underline underline-offset-4">
                 เปลี่ยนกรรมการ
@@ -263,7 +308,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
                       setSelectedStudent(s);
                       setStep(topicStartStep);
                     }}
-                    className={`w-full text-left p-6 md:p-8 rounded-[1.5rem] transition-all group relative overflow-hidden ${
+                    className={`w-full text-left p-4 sm:p-6 md:p-8 rounded-[1.2rem] md:rounded-[1.5rem] transition-all group relative overflow-hidden ${
                       selectedStudent?.id === s.id ? "bg-[#5f00e3] text-white shadow-xl" : "bg-white shadow-sm hover:shadow-xl"
                     }`}
                   >
@@ -276,7 +321,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
                         >
                           ID {s.id}
                         </span>
-                        <h2 className="text-2xl font-bold tracking-tight">{s.name}</h2>
+                        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">{s.name}</h2>
                       </div>
 
                       <div className="grid md:grid-cols-2 gap-5">
@@ -309,13 +354,13 @@ export default function CategoryAssessmentClient({ config }: Props) {
         )}
 
         {step >= topicStartStep && step <= topicEndStep && (
-          <div className="space-y-10">
+          <div className="space-y-8 md:space-y-10">
             <header className="flex flex-col md:flex-row md:items-start justify-between gap-6">
               <div className="space-y-2">
                 <span className="text-[#5f00e3] uppercase tracking-[0.2em] text-xs font-bold opacity-60">
                   Topic {String(step - 1).padStart(2, "0")} / {String(config.topics.length).padStart(2, "0")}
                 </span>
-                <h1 className="text-2xl md:text-4xl font-bold max-w-3xl leading-tight">{config.topics[step - topicStartStep].title}</h1>
+                <h1 className="text-xl sm:text-2xl md:text-4xl font-bold max-w-3xl leading-tight">{config.topics[step - topicStartStep].title}</h1>
               </div>
               <div className="bg-white p-4 rounded-2xl shadow-sm flex items-center gap-3 shrink-0 md:max-w-sm">
                 <div className="w-9 h-9 bg-[#f3f4f5] rounded-full flex items-center justify-center shrink-0">
@@ -330,12 +375,12 @@ export default function CategoryAssessmentClient({ config }: Props) {
             </header>
 
             <div className={focusCard}>
-              <div className="space-y-12">
+              <div className="space-y-10 sm:space-y-12">
                 {config.topics[step - topicStartStep].questions.map((q, idx) => (
-                  <div key={q.id} className="relative grid md:grid-cols-[1fr_160px] gap-8 items-start">
+                  <div key={q.id} className="relative grid md:grid-cols-[1fr_160px] gap-6 md:gap-8 items-start">
                     <div className="relative">
                       <span className="absolute -left-8 -top-4 text-6xl font-bold text-[#5f00e3]/5 select-none">{String(idx + 1).padStart(2, "0")}</span>
-                      <h3 className="text-lg md:text-xl font-medium relative z-10 pt-2">{q.text}</h3>
+                      <h3 className="text-base sm:text-lg md:text-xl font-medium relative z-10 pt-2">{q.text}</h3>
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold text-[#191c1d]/40 uppercase tracking-widest">คะแนน (เต็ม {q.max})</label>
@@ -347,24 +392,24 @@ export default function CategoryAssessmentClient({ config }: Props) {
                         placeholder="0.0"
                         value={scores[q.id] ?? ""}
                         onChange={(e) => handleScoreChange(q.id, e.target.value, q.max)}
-                        className="w-full text-2xl font-bold p-4 bg-[#f3f4f5] rounded-xl border-none focus:ring-4 focus:ring-[#5f00e3]/10 focus:bg-white transition-all outline-none text-center"
+                        className="w-full min-h-12 text-2xl font-bold p-3.5 bg-[#f3f4f5] rounded-xl border-none focus:ring-4 focus:ring-[#5f00e3]/10 focus:bg-white transition-all outline-none text-center"
                       />
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-14 pt-8 border-t border-[#f3f4f5] flex flex-col md:flex-row justify-between items-center gap-5">
+              <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-[#f3f4f5] flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
                 <div className="text-sm">
                   <span className="opacity-40 uppercase font-bold tracking-widest text-xs">Section Subtotal:</span>
                   <span className="ml-2 font-bold text-2xl text-[#9f4200]">{calculateTopicTotal(step - topicStartStep)}</span>
                   <span className="ml-1 opacity-40">/ {calculateTopicMax(step - topicStartStep)}</span>
                 </div>
-                <div className="flex gap-3">
-                  <button onClick={() => setStep(step - 1)} className={secondaryBtn}>
+                <div className="flex gap-3 w-full sm:w-auto">
+                  <button onClick={() => setStep(step - 1)} className={`${secondaryBtn} flex-1 sm:flex-none min-h-11`}>
                     <ChevronLeft size={18} /> Back
                   </button>
-                  <button onClick={() => setStep(step + 1)} className={primaryBtn}>
+                  <button onClick={() => setStep(step + 1)} className={`${primaryBtn} flex-1 sm:flex-none min-h-11`}>
                     {step === topicEndStep ? "View Summary" : "Next"} <ChevronRight size={18} />
                   </button>
                 </div>
@@ -374,10 +419,10 @@ export default function CategoryAssessmentClient({ config }: Props) {
         )}
 
         {step === summaryStep && (
-          <div className="space-y-10">
+          <div className="space-y-8 md:space-y-10">
             <header className="text-center space-y-3">
               <span className="text-[#5f00e3] uppercase tracking-[0.2em] text-xs font-bold opacity-60">Review & Submit</span>
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight">สรุปผลคะแนน</h1>
+              <h1 className="text-3xl md:text-6xl font-bold tracking-tight">สรุปผลคะแนน</h1>
             </header>
 
             <div className="grid md:grid-cols-[1fr_340px] gap-8 items-start">
@@ -427,11 +472,11 @@ export default function CategoryAssessmentClient({ config }: Props) {
               </div>
 
               <div className="md:sticky md:top-24 space-y-6">
-                <div className="bg-[#5f00e3] text-white p-8 rounded-[2rem] shadow-2xl relative overflow-hidden">
+                <div className="bg-[#5f00e3] text-white p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl relative overflow-hidden">
                   <div className="relative z-10 space-y-6">
                     <div>
                       <div className="text-[10px] opacity-60 font-black uppercase tracking-widest mb-2">Grand Total Score</div>
-                      <div className="text-6xl font-bold leading-none tracking-tighter">{grandTotal}</div>
+                      <div className="text-5xl sm:text-6xl font-bold leading-none tracking-tighter">{grandTotal}</div>
                       <div className="text-base font-medium mt-3">Out of {maxScore} points</div>
                     </div>
                     <div className="space-y-3 pt-6 border-t border-white/10">
@@ -447,7 +492,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
                 <button
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="w-full bg-[#191c1d] text-white p-6 rounded-full font-bold text-lg hover:bg-black transition-all flex items-center justify-center gap-3 group shadow-xl"
+                  className="w-full bg-[#191c1d] text-white min-h-12 p-4 sm:p-5 rounded-full font-bold text-base sm:text-lg hover:bg-black transition-all flex items-center justify-center gap-3 group shadow-xl"
                 >
                   {isSubmitting ? "กำลังบันทึกคะแนน..." : "ส่งผลคะแนนอย่างเป็นทางการ"}
                   <Send className="group-hover:translate-x-1 group-hover:-translate-y-0.5 transition-transform" size={20} />
