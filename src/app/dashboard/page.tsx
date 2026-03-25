@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { RefreshCw, Trophy, Users, ClipboardList, TrendingUp, Home } from "lucide-react";
-import type { DashboardData, StudentSummary } from "@/app/api/dashboard/route";
+import type { DashboardData, StudentSummary } from "@/lib/score-store/types";
 
 const CATEGORY_LABELS: Record<string, string> = {
   "sci-tech": "วิทย์ฯ & เทคโน",
@@ -187,7 +187,7 @@ export default function DashboardPage() {
           <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4 text-sm text-red-700">
             ⚠️ <strong>เกิดข้อผิดพลาด:</strong> {error}
             <br />
-            <span className="text-xs text-red-500 mt-1 block">ตรวจสอบว่าตั้งค่า credentials ใน .env.local ถูกต้อง และ Share Sheet กับ Service Account แล้ว</span>
+            <span className="text-xs text-red-500 mt-1 block">ตรวจสอบว่าตั้งค่า Supabase environment variables และตารางข้อมูลพร้อมใช้งานแล้ว</span>
           </div>
         )}
 
@@ -263,7 +263,7 @@ export default function DashboardPage() {
           </div>
 
           {loading && (
-            <div className="py-10 text-center text-sm text-[#191c1d]/40 animate-pulse">กำลังโหลดข้อมูลจาก Google Sheet...</div>
+            <div className="py-10 text-center text-sm text-[#191c1d]/40 animate-pulse">กำลังโหลดข้อมูล...</div>
           )}
 
           {!loading && students.length === 0 && !error && (

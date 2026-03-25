@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ClipboardList, Home, RefreshCw, UserRound } from "lucide-react";
-import type { DashboardData, ScoreRow } from "@/app/api/dashboard/route";
+import type { DashboardData, ScoreRow } from "@/lib/score-store/types";
 import { JUDGE_SESSION_STORAGE_KEY, type JudgeRecord } from "@/lib/judge-session";
 
 export default function JudgeSummaryClient() {

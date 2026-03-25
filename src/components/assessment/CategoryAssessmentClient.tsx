@@ -186,7 +186,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
         throw new Error(err.error || "ส่งคะแนนไม่สำเร็จ");
       }
 
-      setSubmitMessage("บันทึกข้อมูลลง Google Sheets สำเร็จแล้ว");
+      setSubmitMessage("บันทึกข้อมูลสำเร็จแล้ว");
       setStep(0);
       setScores({});
       setSelectedStudent(null);
