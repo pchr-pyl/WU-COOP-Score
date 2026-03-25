@@ -212,9 +212,10 @@ export default function DashboardPage() {
                 <YAxis yAxisId="left" orientation="left" tick={{ fontSize: 11 }} label={{ value: "จำนวน", angle: -90, position: "insideLeft", fontSize: 11 }} />
                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} unit="%" domain={[0, 100]} label={{ value: "% เฉลี่ย", angle: 90, position: "insideRight", fontSize: 11 }} />
                 <Tooltip
-                  formatter={(value: number, name: string) =>
-                    name === "avgPct" ? [`${value}%`, "เฉลี่ย"] : [value, "จำนวน"]
-                  }
+                  formatter={(value, name) => {
+                    const numericValue = typeof value === "number" ? value : 0;
+                    return name === "avgPct" ? [`${numericValue}%`, "เฉลี่ย"] : [numericValue, "จำนวน"];
+                  }}
                 />
                 <Bar yAxisId="left" dataKey="count" name="count" radius={[6, 6, 0, 0]}>
                   {chartData.map((entry, i) => (
