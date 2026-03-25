@@ -383,13 +383,45 @@ export default function AuthenticatedCategoryAssessmentClient({ config }: Props)
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold text-[#191c1d]/40 uppercase tracking-widest">คะแนน (เต็ม {question.max})</label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*\.?[0-9]{0,2}"
                         min="0"
                         max={question.max}
-                        step="0.5"
-                        placeholder="0.0"
+                        step="0.01"
+                        placeholder="0"
                         value={scores[question.id] ?? ""}
-                        onChange={(e) => handleScoreChange(question.id, e.target.value, question.max)}
+                        onChange={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          let value = target.value;
+                          
+                          // อนุญาตเฉพาะตัวเลขและจุดทศนิยม
+                          const cleanValue = value.replace(/[^0-9.]/g, '');
+                          
+                          // จำกัดจุดทศนิยมไว้แค่จุดเดียว
+                          const parts = cleanValue.split('.');
+                          let finalValue = parts[0];
+                          
+                          // เพิ่มทศนิยมถ้ามี และจำกัด 2 ตำแหน่ง
+                          if (parts.length > 1 && parts[1] !== undefined) {
+                            finalValue += '.' + parts[1].slice(0, 2);
+                          }
+                          
+                          // ไม่ให้ขึ้นต้นด้วยจุดทศนิยม
+                          if (finalValue.startsWith('.')) {
+                            finalValue = '0' + finalValue;
+                          }
+                          
+                          target.value = finalValue;
+                          handleScoreChange(question.id, finalValue, question.max);
+                        }}
+                        onKeyPress={(e) => {
+                          const char = e.key;
+                          // อนุญาตเฉพาะตัวเลข และจุดทศนิยม
+                          if (!/[0-9.]/.test(char)) {
+                            e.preventDefault();
+                          }
+                        }}
                         className="w-full min-h-12 text-2xl font-bold p-3.5 bg-[#f3f4f5] rounded-xl border-none focus:ring-4 focus:ring-[#5f00e3]/10 focus:bg-white transition-all outline-none text-center"
                       />
                     </div>
@@ -400,7 +432,7 @@ export default function AuthenticatedCategoryAssessmentClient({ config }: Props)
               <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-[#f3f4f5] flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
                 <div className="text-sm">
                   <span className="opacity-40 uppercase font-bold tracking-widest text-xs">Section Subtotal:</span>
-                  <span className="ml-2 font-bold text-2xl text-[#9f4200]">{calculateTopicTotal(step - topicStartStep)}</span>
+                  <span className="ml-2 font-bold text-2xl text-[#9f4200]">{calculateTopicTotal(step - topicStartStep).toFixed(2)}</span>
                   <span className="ml-1 opacity-40">/ {calculateTopicMax(step - topicStartStep)}</span>
                 </div>
                 <div className="flex gap-3 w-full sm:w-auto">
@@ -460,7 +492,7 @@ export default function AuthenticatedCategoryAssessmentClient({ config }: Props)
                         </div>
                         <div className="text-right ml-4 min-w-[90px]">
                           <div className="text-xl font-bold text-[#9f4200]">
-                            {topicScore} <span className="text-xs opacity-40 font-normal">/ {topicMax}</span>
+                            {topicScore.toFixed(2)} <span className="text-xs opacity-40 font-normal">/ {topicMax}</span>
                           </div>
                         </div>
                       </button>

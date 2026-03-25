@@ -250,7 +250,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
       />
 
       {step >= topicStartStep && (
-        <nav className="fixed top-3 md:top-6 left-1/2 -translate-x-1/2 z-40 bg-white/90 backdrop-blur-xl p-2 rounded-full shadow-lg flex gap-1 items-center border border-white/50 max-w-[95vw] overflow-x-auto">
+        <nav className="fixed top-4 md:top-8 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-xl p-3 rounded-2xl shadow-xl flex gap-2 items-center border border-gray-200 max-w-[90vw] overflow-x-auto">
           {config.topics.map((t, idx) => {
             const topicStep = idx + topicStartStep;
             const isActive = step === topicStep;
@@ -259,26 +259,28 @@ export default function CategoryAssessmentClient({ config }: Props) {
               <button
                 key={t.id}
                 onClick={() => setStep(topicStep)}
-                className={`w-11 h-11 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all relative shrink-0 ${
+                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all relative shrink-0 font-bold text-sm ${
                   isActive
-                    ? "bg-[#5f00e3] text-white scale-105 shadow-md"
+                    ? "bg-gradient-to-br from-[#5f00e3] to-[#7b3ff2] text-white scale-105 shadow-lg"
                     : isDone
-                      ? "bg-[#5f00e3]/10 text-[#5f00e3]"
-                      : "bg-transparent text-[#191c1d]/30 hover:bg-[#f3f4f5]"
+                      ? "bg-gradient-to-br from-[#e8f4fd] to-[#d1e9fc] text-[#5f00e3] border border-[#5f00e3]/20"
+                      : "bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-200"
                 }`}
               >
-                {isDone && !isActive ? <Check size={16} /> : <span className="text-sm font-bold">{idx + 1}</span>}
+                {isDone && !isActive ? <Check size={18} /> : idx + 1}
               </button>
             );
           })}
-          <div className="w-px h-6 bg-[#f3f4f5] mx-1" />
+          <div className="w-px h-8 bg-gray-300 mx-2" />
           <button
             onClick={() => setStep(summaryStep)}
-            className={`w-11 h-11 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
-              step === summaryStep ? "bg-[#9f4200] text-white" : "text-[#191c1d]/30 hover:bg-[#f3f4f5]"
+            className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shrink-0 ${
+              step === summaryStep 
+                ? "bg-gradient-to-br from-[#9f4200] to-[#fe6c00] text-white shadow-lg" 
+                : "bg-gray-50 text-gray-400 hover:bg-gray-100 border border-gray-200"
             }`}
           >
-            <LayoutGrid size={18} />
+            <LayoutGrid size={20} />
           </button>
         </nav>
       )}
@@ -286,10 +288,24 @@ export default function CategoryAssessmentClient({ config }: Props) {
       <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 pt-20 pb-14 md:py-24">
         {step === 0 && (
           <div className="space-y-8 md:space-y-10">
-            <header className="space-y-3">
-              <span className="text-[#5f00e3] uppercase tracking-[0.2em] text-xs font-bold opacity-60">Step 01</span>
-              <h1 className="text-2xl sm:text-3xl md:text-6xl font-bold tracking-tight">เลือกกรรมการผู้ประเมิน</h1>
-              <p className="text-sm md:text-base text-[#191c1d]/60">{config.title} | {config.subtitle}</p>
+            <header className="text-center space-y-4">
+              <div className="inline-flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-[#5f00e3]/10 to-[#7b3ff2]/10 rounded-full border border-[#5f00e3]/20">
+                <span className="text-[#5f00e3] uppercase tracking-[0.2em] text-xs font-bold">Step 01</span>
+                <div className="w-2 h-2 bg-[#5f00e3] rounded-full animate-pulse"></div>
+              </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-[#191c1d] to-[#5f00e3] bg-clip-text text-transparent">
+                กรุณาเข้าสู่ระบบ
+              </h1>
+              <div className="flex flex-col items-center gap-3 text-sm md:text-base text-[#191c1d]/60">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 bg-white rounded-full shadow-sm border border-gray-200">{config.title}</span>
+                  <span className="text-gray-400">•</span>
+                  <span>{config.subtitle}</span>
+                </div>
+                <p className="text-center max-w-md">
+                  กรุณากรอกรหัสผ่านของท่านเพื่อยืนยันตัวตนกรรมการผู้ประเมิน
+                </p>
+              </div>
             </header>
 
             {loadingJudges ? (
@@ -297,7 +313,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
             ) : availableJudges.length === 0 ? (
               <div className="bg-white rounded-3xl p-8 shadow-sm text-[#191c1d]/60">ไม่พบรายชื่อกรรมการสำหรับประเภทนี้</div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {availableJudges.map((j) => (
                 <button
                   key={j.id}
@@ -305,13 +321,40 @@ export default function CategoryAssessmentClient({ config }: Props) {
                     setSelectedJudge(j);
                     setStep(1);
                   }}
-                  className={`text-left p-5 sm:p-6 rounded-[1.1rem] sm:rounded-[1.25rem] transition-all ${
-                    selectedJudge?.id === j.id ? "bg-[#5f00e3] text-white" : "bg-[#f3f4f5] hover:bg-white hover:shadow-xl"
+                  className={`group text-left p-6 rounded-2xl transition-all relative overflow-hidden ${
+                    selectedJudge?.id === j.id 
+                      ? "bg-gradient-to-br from-[#5f00e3] to-[#7b3ff2] text-white shadow-xl scale-105" 
+                      : "bg-white border border-gray-200 hover:border-[#5f00e3]/30 hover:shadow-lg hover:scale-[1.02]"
                   }`}
                 >
-                  <User className={`mb-3 ${selectedJudge?.id === j.id ? "text-white" : "text-[#5f00e3]"}`} size={28} />
-                  <div className="text-lg font-bold mb-1">{j.name}</div>
-                  <div className={`text-sm opacity-70 ${selectedJudge?.id === j.id ? "text-white" : "text-[#191c1d]"}`}>{j.dept}</div>
+                  <div className={`absolute top-0 right-0 w-20 h-20 rounded-full transition-all duration-500 ${
+                    selectedJudge?.id === j.id 
+                      ? "bg-white/10" 
+                      : "bg-gradient-to-br from-[#5f00e3]/5 to-transparent"
+                  }`}></div>
+                  
+                  <div className="relative z-10">
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-all ${
+                      selectedJudge?.id === j.id 
+                        ? "bg-white/20" 
+                        : "bg-gradient-to-br from-[#5f00e3]/10 to-[#7b3ff2]/10"
+                    }`}>
+                      <User className={selectedJudge?.id === j.id ? "text-white" : "text-[#5f00e3]"} size={24} />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-bold leading-tight">{j.name}</h3>
+                      <p className={`text-sm ${
+                        selectedJudge?.id === j.id ? "text-white/80" : "text-gray-600"
+                      }`}>{j.dept}</p>
+                    </div>
+                    
+                    <div className={`mt-4 text-xs font-medium ${
+                      selectedJudge?.id === j.id ? "text-white/90" : "text-[#5f00e3]"
+                    }`}>
+                      {selectedJudge?.id === j.id ? "✓ ยืนยันตัวตนแล้ว" : "คลิกเพื่อเข้าสู่ระบบ"}
+                    </div>
+                  </div>
                 </button>
                 ))}
               </div>
@@ -321,15 +364,27 @@ export default function CategoryAssessmentClient({ config }: Props) {
 
         {step === 1 && (
           <div className="space-y-8 md:space-y-10">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
-              <header className="space-y-3">
-                <span className="text-[#5f00e3] uppercase tracking-[0.2em] text-xs font-bold opacity-60">Step 02</span>
-                <h1 className="text-2xl sm:text-3xl md:text-6xl font-bold tracking-tight">เลือกนักศึกษา</h1>
-              </header>
-              <button onClick={() => setStep(0)} className="text-sm text-[#5f00e3] underline underline-offset-4">
-                เปลี่ยนกรรมการ
-              </button>
-            </div>
+            <header className="text-center space-y-4">
+              <div className="inline-flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-[#5f00e3]/10 to-[#7b3ff2]/10 rounded-full border border-[#5f00e3]/20">
+                <span className="text-[#5f00e3] uppercase tracking-[0.2em] text-xs font-bold">Step 02</span>
+                <div className="w-2 h-2 bg-[#5f00e3] rounded-full animate-pulse"></div>
+              </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-[#191c1d] to-[#5f00e3] bg-clip-text text-transparent">
+                เลือกนักศึกษา
+              </h1>
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-full shadow-sm border border-gray-200">
+                  <User size={14} className="text-[#5f00e3]" />
+                  <span className="text-sm text-gray-700">{selectedJudge?.name}</span>
+                </div>
+                <button 
+                  onClick={() => setStep(0)} 
+                  className="text-sm text-[#5f00e3] hover:text-[#7b3ff2] transition-colors underline underline-offset-4"
+                >
+                  เปลี่ยนกรรมการ
+                </button>
+              </div>
+            </header>
 
             {loadingStudents ? (
               <div className="bg-white rounded-3xl p-8 shadow-sm">กำลังโหลดรายชื่อนักศึกษา...</div>
@@ -438,77 +493,174 @@ export default function CategoryAssessmentClient({ config }: Props) {
 
         {step >= topicStartStep && step <= topicEndStep && (
           <div className="space-y-8 md:space-y-10">
-            <header className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-              <div className="space-y-2">
-                <span className="text-[#5f00e3] uppercase tracking-[0.2em] text-xs font-bold opacity-60">
+            <header className="text-center space-y-6">
+              <div className="inline-flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-[#5f00e3]/10 to-[#7b3ff2]/10 rounded-full border border-[#5f00e3]/20">
+                <span className="text-[#5f00e3] uppercase tracking-[0.2em] text-xs font-bold">
                   Topic {String(step - 1).padStart(2, "0")} / {String(config.topics.length).padStart(2, "0")}
                 </span>
-                {(() => {
-                  const title = config.topics[step - topicStartStep].title;
-                  // หาวิธีแยกหัวข้อและรายละเอียดที่ดีกว่า
-                  const parts = title.split(/ มีการ| โดย| และ| ทั้ง| อันเนื่องมาจาก| ที่นำไป| ซึ่ง| ผู้มี| 1\)|2\)/);
-                  const summary = parts[0]?.trim() || title;
-                  const description = parts.slice(1).join('').trim();
-                  return (
-                    <>
-                      <div className="text-xl sm:text-2xl md:text-4xl font-bold max-w-3xl leading-tight">{summary}</div>
-                      {description && (
-                        <div className="text-base md:text-lg text-gray-500 mt-2 max-w-3xl leading-relaxed">{description}</div>
-                      )}
-                    </>
-                  );
-                })()}
+                <div className="w-2 h-2 bg-[#5f00e3] rounded-full animate-pulse"></div>
               </div>
-              <div className="bg-white p-4 rounded-2xl shadow-sm flex items-center gap-3 shrink-0 md:max-w-sm">
-                <div className="w-9 h-9 bg-[#f3f4f5] rounded-full flex items-center justify-center shrink-0">
-                  <GraduationCap size={18} className="text-[#9f4200]" />
+              
+              {(() => {
+                const title = config.topics[step - topicStartStep].title;
+                // หาวิธีแยกหัวข้อและรายละเอียดที่ดีกว่า
+                const parts = title.split(/ มีการ| โดย| และ| ทั้ง| อันเนื่องมาจาก| ที่นำไป| ซึ่ง| ผู้มี| 1\)|2\)/);
+                const summary = parts[0]?.trim() || title;
+                const description = parts.slice(1).join('').trim();
+                return (
+                  <>
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-[#191c1d] to-[#5f00e3] bg-clip-text text-transparent max-w-4xl mx-auto leading-tight">
+                      {summary}
+                    </h1>
+                    {description && (
+                      <div className="text-base md:text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200">
+                        {description}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+              
+              <div className="flex items-center justify-center gap-6">
+                <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-full shadow-lg border border-gray-200">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#9f4200]/10 to-[#fe6c00]/10 rounded-full flex items-center justify-center">
+                    <GraduationCap size={16} className="text-[#9f4200]" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-[10px] opacity-60 font-black uppercase tracking-widest">Student</div>
+                    <div className="font-bold text-sm">{selectedStudent?.name}</div>
+                    <div className="text-[10px] opacity-60">{selectedStudent?.workplace}</div>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <div className="text-[10px] opacity-40 font-black uppercase tracking-widest">Student</div>
-                  <div className="font-bold text-sm truncate">{selectedStudent?.name}</div>
-                  <div className="text-[10px] opacity-60 truncate">{selectedStudent?.workplace}</div>
+                
+                <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-full shadow-lg border border-gray-200">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#5f00e3]/10 to-[#7b3ff2]/10 rounded-full flex items-center justify-center">
+                    <User size={16} className="text-[#5f00e3]" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-[10px] opacity-60 font-black uppercase tracking-widest">Judge</div>
+                    <div className="font-bold text-sm">{selectedJudge?.name}</div>
+                    <div className="text-[10px] opacity-60">{selectedJudge?.dept}</div>
+                  </div>
                 </div>
               </div>
             </header>
 
             <div className={focusCard}>
-              <div className="space-y-10 sm:space-y-12">
+              <div className="space-y-8">
                 {config.topics[step - topicStartStep].questions.map((q, idx) => (
-                  <div key={q.id} className="relative grid md:grid-cols-[1fr_160px] gap-6 md:gap-8 items-start">
-                    <div className="relative">
-                      <span className="absolute -left-8 -top-4 text-6xl font-bold text-[#5f00e3]/5 select-none">{String(idx + 1).padStart(2, "0")}</span>
-                      <h3 className="text-base sm:text-lg md:text-xl font-medium relative z-10 pt-2">{q.text}</h3>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-[#191c1d]/40 uppercase tracking-widest">คะแนน (เต็ม {q.max})</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max={q.max}
-                        step="0.5"
-                        placeholder="0.0"
-                        value={scores[q.id] ?? ""}
-                        onChange={(e) => handleScoreChange(q.id, e.target.value, q.max)}
-                        className="w-full min-h-12 text-2xl font-bold p-3.5 bg-[#f3f4f5] rounded-xl border-none focus:ring-4 focus:ring-[#5f00e3]/10 focus:bg-white transition-all outline-none text-center"
-                      />
+                  <div key={q.id} className="group relative bg-gradient-to-r from-white to-gray-50/30 rounded-2xl p-6 border border-gray-200 hover:border-[#5f00e3]/30 transition-all">
+                    <div className="flex items-start gap-6">
+                      {/* Question Number */}
+                      <div className="flex-shrink-0">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#5f00e3]/10 to-[#7b3ff2]/10 rounded-xl flex items-center justify-center">
+                          <span className="text-lg font-bold text-[#5f00e3]">{idx + 1}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Question Text */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg md:text-xl font-semibold text-[#191c1d] leading-relaxed mb-4">
+                          {q.text}
+                        </h3>
+                      </div>
+                      
+                      {/* Score Input */}
+                      <div className="flex-shrink-0">
+                        <div className="text-center">
+                          <label className="text-xs font-medium text-gray-500 uppercase tracking-wider block mb-2">
+                            คะแนน (เต็ม {q.max})
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              pattern="[0-9]*\.?[0-9]{0,2}"
+                              min="0"
+                              max={q.max}
+                              step="0.01"
+                              placeholder="0"
+                              value={scores[q.id] ?? ""}
+                              onChange={(e) => {
+                                const target = e.target as HTMLInputElement;
+                                let value = target.value;
+                                
+                                // อนุญาตเฉพาะตัวเลขและจุดทศนิยม
+                                const cleanValue = value.replace(/[^0-9.]/g, '');
+                                
+                                // จำกัดจุดทศนิยมไว้แค่จุดเดียว
+                                const parts = cleanValue.split('.');
+                                let finalValue = parts[0];
+                                
+                                // เพิ่มทศนิยมถ้ามี และจำกัด 2 ตำแหน่ง
+                                if (parts.length > 1 && parts[1] !== undefined) {
+                                  finalValue += '.' + parts[1].slice(0, 2);
+                                }
+                                
+                                // ไม่ให้ขึ้นต้นด้วยจุดทศนิยม
+                                if (finalValue.startsWith('.')) {
+                                  finalValue = '0' + finalValue;
+                                }
+                                
+                                target.value = finalValue;
+                                handleScoreChange(q.id, finalValue, q.max);
+                              }}
+                              onKeyPress={(e) => {
+                                const char = e.key;
+                                // อนุญาตเฉพาะตัวเลข และจุดทศนิยม
+                                if (!/[0-9.]/.test(char)) {
+                                  e.preventDefault();
+                                }
+                              }}
+                              className="w-24 h-14 text-xl font-bold bg-white border-2 border-gray-200 rounded-xl focus:border-[#5f00e3] focus:ring-2 focus:ring-[#5f00e3]/20 transition-all outline-none text-center"
+                            />
+                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#5f00e3] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-10 sm:mt-14 pt-6 sm:pt-8 border-t border-[#f3f4f5] flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
-                <div className="text-sm">
-                  <span className="opacity-40 uppercase font-bold tracking-widest text-xs">Section Subtotal:</span>
-                  <span className="ml-2 font-bold text-2xl text-[#9f4200]">{calculateTopicTotal(step - topicStartStep)}</span>
-                  <span className="ml-1 opacity-40">/ {calculateTopicMax(step - topicStartStep)}</span>
-                </div>
-                <div className="flex gap-3 w-full sm:w-auto">
-                  <button onClick={() => setStep(step - 1)} className={`${secondaryBtn} flex-1 sm:flex-none min-h-11`}>
-                    <ChevronLeft size={18} /> Back
-                  </button>
-                  <button onClick={() => setStep(step + 1)} className={`${primaryBtn} flex-1 sm:flex-none min-h-11`}>
-                    {step === topicEndStep ? "View Summary" : "Next"} <ChevronRight size={18} />
-                  </button>
+              <div className="mt-12 pt-8 border-t border-gray-200">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-gradient-to-r from-gray-50 to-white rounded-2xl p-6 border border-gray-200">
+                  <div className="text-center md:text-left">
+                    <div className="text-xs uppercase tracking-wider text-gray-500 font-medium mb-2">Section Subtotal</div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-bold text-[#9f4200]">{calculateTopicTotal(step - topicStartStep).toFixed(2)}</span>
+                      <span className="text-lg text-gray-400">/ {calculateTopicMax(step - topicStartStep)}</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {((calculateTopicTotal(step - topicStartStep) / calculateTopicMax(step - topicStartStep)) * 100).toFixed(2)}% Complete
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3 w-full md:w-auto">
+                    <button 
+                      onClick={() => setStep(step - 1)} 
+                      className="flex-1 md:flex-none px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                    >
+                      <ChevronLeft size={18} /> ย้อนกลับ
+                    </button>
+                    {step < topicEndStep ? (
+                      <button 
+                        onClick={() => setStep(step + 1)} 
+                        disabled={!isTopicCompleted(step - topicStartStep)}
+                        className="flex-1 md:flex-none px-6 py-3 bg-gradient-to-br from-[#5f00e3] to-[#7b3ff2] text-white rounded-xl font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:shadow-none"
+                      >
+                        ถัดไป <ChevronRight size={18} />
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={() => setStep(summaryStep)} 
+                        disabled={!isTopicCompleted(step - topicStartStep)}
+                        className="flex-1 md:flex-none px-6 py-3 bg-gradient-to-br from-[#9f4200] to-[#fe6c00] text-white rounded-xl font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:shadow-none"
+                      >
+                        <LayoutGrid size={18} /> สรุปคะแนน
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -559,7 +711,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
                         </div>
                         <div className="text-right ml-4 min-w-[90px]">
                           <div className="text-xl font-bold text-[#9f4200]">
-                            {topicScore} <span className="text-xs opacity-40 font-normal">/ {topicMax}</span>
+                            {topicScore.toFixed(2)} <span className="text-xs opacity-40 font-normal">/ {topicMax}</span>
                           </div>
                         </div>
                       </button>

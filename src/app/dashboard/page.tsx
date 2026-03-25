@@ -34,24 +34,34 @@ function StatCard({
   sub?: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)] flex items-center gap-4">
-      <div className="w-11 h-11 rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0">
-        <Icon size={22} className="text-[#9f4200]" />
+    <div className="bg-white rounded-2xl px-6 py-6 shadow-[0_8px_24px_rgba(25,28,29,0.06)] flex items-center gap-4 hover:shadow-lg transition-all">
+      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#f3f4f5] to-[#e8e9ea] flex items-center justify-center shrink-0">
+        <Icon size={24} className="text-[#9f4200]" />
       </div>
-      <div>
+      <div className="flex-1">
         <p className="text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">{label}</p>
-        <p className="text-2xl font-bold tracking-tight">{value}</p>
-        {sub && <p className="text-xs text-[#191c1d]/50 mt-0.5">{sub}</p>}
+        <p className="text-3xl font-bold tracking-tight">{value}</p>
+        {sub && <p className="text-xs text-[#191c1d]/50 mt-1">{sub}</p>}
       </div>
     </div>
   );
 }
 
 function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="text-lg">🥇</span>;
-  if (rank === 2) return <span className="text-lg">🥈</span>;
-  if (rank === 3) return <span className="text-lg">🥉</span>;
-  return <span className="text-sm font-bold text-[#191c1d]/40">#{rank}</span>;
+  const badgeStyles = {
+    1: "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white shadow-lg",
+    2: "bg-gradient-to-br from-gray-300 to-gray-500 text-white shadow-lg", 
+    3: "bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-lg",
+    default: "bg-gradient-to-br from-gray-200 to-gray-400 text-white"
+  };
+  
+  const badgeClass = badgeStyles[rank as keyof typeof badgeStyles] || badgeStyles.default;
+  
+  return (
+    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${badgeClass}`}>
+      {rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank}
+    </div>
+  );
 }
 
 function StudentRow({
@@ -63,28 +73,44 @@ function StudentRow({
 }) {
   const dot = CATEGORY_COLORS[student.category] ?? "#999";
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-[#f0f0f0] last:border-0">
-      <div className="w-8 text-center shrink-0">
-        <RankBadge rank={rank} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-block w-2 h-2 rounded-full shrink-0"
-            style={{ background: dot }}
-          />
-          <p className="font-semibold text-sm truncate">{student.studentName}</p>
+    <div className="group bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-xl transition-all">
+      <div className="flex items-center gap-6">
+        {/* Rank Badge */}
+        <div className="flex-shrink-0">
+          <RankBadge rank={rank} />
         </div>
-        <p className="text-xs text-[#191c1d]/50 truncate mt-0.5">{student.project || student.workplace}</p>
-        <p className="text-[10px] text-[#191c1d]/35 mt-0.5">
-          {CATEGORY_LABELS[student.category] ?? student.categoryTitle} · {student.judgeCount} กรรมการ
-        </p>
-      </div>
-      <div className="text-right shrink-0">
-        <p className="text-base font-bold tabular-nums">{student.avgPct.toFixed(2)}%</p>
-        <p className="text-xs text-[#191c1d]/45 tabular-nums">
-          {student.avgScore.toFixed(2)}/{student.maxScore}
-        </p>
+        
+        {/* Student Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 mb-3">
+            <span
+              className="inline-block w-4 h-4 rounded-full shrink-0 shadow-md"
+              style={{ background: dot }}
+            />
+            <h3 className="text-lg font-bold text-[#191c1d] truncate">{student.studentName}</h3>
+          </div>
+          
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600 line-clamp-1">{student.project || student.workplace}</p>
+            <div className="flex items-center gap-3 text-xs">
+              <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 font-medium">
+                {CATEGORY_LABELS[student.category] ?? student.categoryTitle}
+              </span>
+              <span className="text-gray-400">•</span>
+              <span className="text-gray-600">{student.judgeCount} กรรมการ</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Score */}
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          <div className="text-right">
+            <p className="text-3xl font-bold tabular-nums text-[#9f4200]">{student.avgPct.toFixed(2)}%</p>
+            <p className="text-xs text-gray-500 tabular-nums">
+              {student.avgScore.toFixed(2)}/{student.maxScore}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -146,39 +172,46 @@ export default function DashboardPage() {
       <div className="pointer-events-none fixed -top-24 -left-16 w-80 h-80 rounded-full bg-[#5f00e3]/5 blur-3xl" />
       <div className="pointer-events-none fixed bottom-0 right-0 w-96 h-96 rounded-full bg-[#fe6c00]/6 blur-3xl" />
 
-      <div className="relative mx-auto max-w-6xl space-y-6">
+      <div className="relative mx-auto max-w-6xl space-y-8">
         {/* Header */}
-        <header className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.22em] text-[#5f00e3]/60 font-semibold">WU COOP SCORE 2026</p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard คะแนน</h1>
-            {lastRefresh && (
-              <p className="text-xs text-[#191c1d]/40 mt-0.5">
-                อัปเดตล่าสุด {lastRefresh.toLocaleTimeString("th-TH")}
-              </p>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white shadow-sm text-sm font-medium hover:bg-[#f3f4f5] transition-colors"
-            >
-              <Home size={15} /> หน้าหลัก
-            </Link>
-            <Link
-              href="/judge-summary"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white shadow-sm text-sm font-medium hover:bg-[#f3f4f5] transition-colors"
-            >
-              <Users size={15} /> สรุปรายอาจารย์
-            </Link>
-            <button
-              onClick={fetchData}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-[#9f4200] to-[#fe6c00] text-white text-sm font-medium disabled:opacity-60 hover:opacity-90 transition-opacity"
-            >
-              <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-              {loading ? "กำลังโหลด..." : "รีเฟรช"}
-            </button>
+        <header className="sticky top-0 bg-[#f8f9fa] z-20 px-4 py-4 backdrop-blur-sm border-b border-gray-200">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <div className="inline-flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-[#5f00e3]/10 to-[#7b3ff2]/10 rounded-full border border-[#5f00e3]/20">
+                <span className="text-[#5f00e3] uppercase tracking-[0.2em] text-xs font-bold">WU COOP SCORE 2026</span>
+                <div className="w-2 h-2 bg-[#5f00e3] rounded-full animate-pulse"></div>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-[#191c1d] to-[#5f00e3] bg-clip-text text-transparent">
+                Dashboard คะแนน
+              </h1>
+              {lastRefresh && (
+                <p className="text-sm text-[#191c1d]/60 mt-2">
+                  อัปเดตล่าสุด {lastRefresh.toLocaleTimeString("th-TH")}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <Link
+                href="/"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white shadow-md text-sm font-medium hover:bg-[#f3f4f5] transition-all hover:shadow-lg"
+              >
+                <Home size={16} /> หน้าหลัก
+              </Link>
+              <Link
+                href="/judge-summary"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white shadow-md text-sm font-medium hover:bg-[#f3f4f5] transition-all hover:shadow-lg"
+              >
+                <Users size={16} /> สรุปรายอาจารย์
+              </Link>
+              <button
+                onClick={fetchData}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-[#9f4200] to-[#fe6c00] text-white text-sm font-medium disabled:opacity-60 hover:shadow-lg transition-all hover:scale-[1.02] disabled:hover:scale-100"
+              >
+                <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+                {loading ? "กำลังโหลด..." : "รีเฟรช"}
+              </button>
+            </div>
           </div>
         </header>
 
@@ -192,52 +225,55 @@ export default function DashboardPage() {
         )}
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard label="Submissions" value={data?.totalSubmissions ?? "—"} icon={ClipboardList} sub="รายการทั้งหมด" />
-          <StatCard label="นักศึกษา" value={totalStudents} icon={Users} sub="คนที่มีคะแนน" />
-          <StatCard label="กรรมการ" value={totalJudges} icon={Trophy} sub="ที่ให้คะแนนแล้ว" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard label="รายการประเมิน" value={data?.totalSubmissions ?? "—"} icon={ClipboardList} sub="ทั้งหมด" />
+          <StatCard label="นักศึกษา" value={totalStudents} icon={Users} sub="ที่มีคะแนน" />
+          <StatCard label="กรรมการ" value={totalJudges} icon={Trophy} sub="ที่ให้คะแนน" />
           <StatCard
-            label="เฉลี่ยรวม"
+            label="คะแนนเฉลี่ย"
             value={
               data && data.rows.length > 0
                 ? `${(data.rows.reduce((s, r) => s + r.pct, 0) / data.rows.length).toFixed(2)}%`
                 : "—"
             }
             icon={TrendingUp}
-            sub="% ของคะแนนสูงสุด"
+            sub="เฉลี่ยรวม"
           />
         </div>
 
         {/* Category breakdown chart */}
         {chartData.length > 0 && (
-          <section className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)]">
-            <h2 className="text-base font-bold mb-4">สรุปตามประเภท</h2>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={chartData} barSize={36}>
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis yAxisId="left" orientation="left" tick={{ fontSize: 11 }} label={{ value: "จำนวน", angle: -90, position: "insideLeft", fontSize: 11 }} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} unit="%" domain={[0, 100]} label={{ value: "% เฉลี่ย", angle: 90, position: "insideRight", fontSize: 11 }} />
+          <section className="bg-white rounded-2xl px-6 py-6 shadow-[0_8px_24px_rgba(25,28,29,0.06)]">
+            <h2 className="text-lg font-bold mb-6">สรุปตามประเภท</h2>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={chartData} barSize={40}>
+                <XAxis dataKey="name" tick={{ fontSize: 13 }} />
+                <YAxis yAxisId="left" orientation="left" tick={{ fontSize: 12 }} label={{ value: "จำนวน", angle: -90, position: "insideLeft", fontSize: 12 }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} unit="%" domain={[0, 100]} label={{ value: "% เฉลี่ย", angle: 90, position: "insideRight", fontSize: 12 }} />
                 <Tooltip
                   formatter={(value, name) => {
                     const numericValue = typeof value === "number" ? value : 0;
                     return name === "avgPct" ? [`${numericValue}%`, "เฉลี่ย"] : [numericValue, "จำนวน"];
                   }}
                 />
-                <Bar yAxisId="left" dataKey="count" name="count" radius={[6, 6, 0, 0]}>
+                <Bar yAxisId="left" dataKey="count" name="count" radius={[8, 8, 0, 0]}>
                   {chartData.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Bar>
-                <Bar yAxisId="right" dataKey="avgPct" name="avgPct" fill="#e5e7eb" radius={[6, 6, 0, 0]} />
+                <Bar yAxisId="right" dataKey="avgPct" name="avgPct" fill="#e5e7eb" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </section>
         )}
 
         {/* Ranking table */}
-        <section className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)]">
-          <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-            <h2 className="text-base font-bold">อันดับคะแนนนักศึกษา</h2>
+        <section className="bg-white rounded-2xl px-6 py-6 shadow-[0_8px_24px_rgba(25,28,29,0.06)]">
+          <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+            <div>
+              <h2 className="text-lg font-bold">อันดับคะแนนนักศึกษา</h2>
+              <p className="text-sm text-[#191c1d]/60">จัดอันดับตามเปอร์เซนต์เฉลี่ย</p>
+            </div>
             <div className="flex gap-2 flex-wrap">
               {[
                 { key: "all", label: "ทั้งหมด" },
@@ -250,10 +286,10 @@ export default function DashboardPage() {
                   key={tab.key}
                   onClick={() => setActiveCategory(tab.key)}
                   className={[
-                    "px-3 py-1 rounded-lg text-xs font-semibold transition-colors",
+                    "px-4 py-2 rounded-xl text-sm font-semibold transition-all",
                     activeCategory === tab.key
-                      ? "bg-gradient-to-br from-[#9f4200] to-[#fe6c00] text-white"
-                      : "bg-[#f3f4f5] text-[#191c1d]/60 hover:bg-[#e8e9ea]",
+                      ? "bg-gradient-to-br from-[#9f4200] to-[#fe6c00] text-white shadow-md"
+                      : "bg-[#f3f4f5] text-[#191c1d]/70 hover:bg-[#e8e9ea] hover:text-[#191c1c]",
                   ].join(" ")}
                 >
                   {tab.label}
@@ -263,18 +299,33 @@ export default function DashboardPage() {
           </div>
 
           {loading && (
-            <div className="py-10 text-center text-sm text-[#191c1d]/40 animate-pulse">กำลังโหลดข้อมูล...</div>
-          )}
-
-          {!loading && students.length === 0 && !error && (
-            <div className="py-10 text-center text-sm text-[#191c1d]/40">
-              ยังไม่มีข้อมูลคะแนน — รอกรรมการส่งคะแนน
+            <div className="py-16 text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#f3f4f5] rounded-xl">
+                <div className="w-4 h-4 border-2 border-[#9f4200] border-t-transparent animate-spin rounded-full"></div>
+                <span className="text-sm text-[#191c1d]/60">กำลังโหลดข้อมูล...</span>
+              </div>
             </div>
           )}
 
-          {students.map((s, i) => (
-            <StudentRow key={`${s.studentId}-${s.category}`} student={s} rank={i + 1} />
-          ))}
+          {!loading && students.length === 0 && !error && (
+            <div className="py-16 text-center">
+              <div className="inline-flex flex-col items-center gap-3 px-6 py-8 bg-[#f3f4f5] rounded-2xl">
+                <div className="w-12 h-12 bg-[#e8e9ea] rounded-full flex items-center justify-center">
+                  <ClipboardList size={20} className="text-[#191c1c]/50" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#191c1c]">ยังไม่มีข้อมูลคะแนน</p>
+                  <p className="text-xs text-[#191c1d]/50">รอกรรมการส่งคะแนน</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {students.map((s, i) => (
+              <StudentRow key={`${s.studentId}-${s.category}`} student={s} rank={i + 1} />
+            ))}
+          </div>
         </section>
 
         {/* Raw log (collapsible) */}

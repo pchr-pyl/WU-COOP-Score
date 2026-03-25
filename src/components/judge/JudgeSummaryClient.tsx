@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ClipboardList, Home, RefreshCw, UserRound } from "lucide-react";
+import { ClipboardList, Home, RefreshCw, UserRound, Users } from "lucide-react";
 import type { DashboardData, ScoreRow } from "@/lib/score-store/types";
 import { JUDGE_SESSION_STORAGE_KEY, type JudgeRecord } from "@/lib/judge-session";
 import { CATEGORY_CONFIG } from "@/lib/assessment-config";
@@ -49,10 +49,28 @@ export default function JudgeSummaryClient() {
 
   const totalScore = rows.reduce((sum, row) => sum + row.totalScore, 0);
   const uniqueStudents = new Set(rows.map((row) => `${row.studentId}::${row.category}`));
+  const averageScore = uniqueStudents.size > 0 ? totalScore / uniqueStudents.size : 0;
+  
+  // ดึงข้อมูลทั้งหมดเพื่อคำนวณจำนวนกรรมการที่ร่วมประเมิน
+  const allJudgesCount = data?.rows ? new Set(data.rows.map(row => row.judgeId)).size : 0;
 
   // ดึงข้อมูลคะแนนรายข้อจาก Supabase
   const [detailedScores, setDetailedScores] = useState<any[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [selectedStudentDetails, setSelectedStudentDetails] = useState<any>(null);
+  const [showPopup, setShowPopup] = useState(false);
+
+  // ESC key handler
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showPopup) {
+        setShowPopup(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [showPopup]);
 
   const fetchDetailedScores = async () => {
     if (!judge) return;
@@ -76,10 +94,11 @@ export default function JudgeSummaryClient() {
   }, [judge]);
 
   return (
-    <main className="relative min-h-screen bg-[#f8f9fa] text-[#191c1d] px-4 py-8 sm:px-6 md:px-10 leading-[1.75] overflow-hidden">
+    <main className="min-h-screen bg-[#f8f9fa] text-[#191c1d] leading-[1.75]">
       <div className="fixed top-0 left-0 h-1 w-full bg-gradient-to-r from-[#9f4200] to-[#fe6c00] z-50" />
-      <div className="relative mx-auto max-w-6xl space-y-6">
-        <header className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="sticky top-0 bg-[#f8f9fa] z-20 px-4 py-4 backdrop-blur-sm border-b border-gray-200">
+        <div className="mx-auto max-w-6xl">
+          <header className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <p className="text-[10px] uppercase tracking-[0.22em] text-[#5f00e3]/60 font-semibold">WU COOP SCORE 2026</p>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">สรุปผลการประเมินรายอาจารย์</h1>
@@ -94,7 +113,10 @@ export default function JudgeSummaryClient() {
             </button>
           </div>
         </header>
+        </div>
+      </div>
 
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 md:px-10 space-y-6">
         {!judge && (
           <div className="bg-white rounded-2xl px-5 py-8 shadow-[0_8px_24px_rgba(25,28,29,0.06)] text-center text-[#191c1d]/60">
             ยังไม่มีข้อมูลกรรมการในเครื่องนี้ กรุณากลับไปที่หน้าแรกเพื่อกรอก password ของอาจารย์ก่อน
@@ -103,7 +125,7 @@ export default function JudgeSummaryClient() {
 
         {judge && (
           <>
-            <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <section className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)] flex items-center gap-4">
                 <div className="w-11 h-11 rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0"><ClipboardList size={22} className="text-[#9f4200]" /></div>
                 <div>
@@ -119,10 +141,17 @@ export default function JudgeSummaryClient() {
                 </div>
               </div>
               <div className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)] flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0"><Users size={22} className="text-[#5f00e3]" /></div>
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">กรรมการร่วมประเมิน</p>
+                  <p className="text-2xl font-bold tracking-tight">{allJudgesCount}</p>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)] flex items-center gap-4">
                 <div className="w-11 h-11 rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0"><ClipboardList size={22} className="text-[#9f4200]" /></div>
                 <div>
-                  <p className="text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">คะแนนรวมที่ให้ไป</p>
-                  <p className="text-2xl font-bold tracking-tight">{totalScore}</p>
+                  <p className="text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">คะแนนเฉลี่ยต่อคน</p>
+                  <p className="text-2xl font-bold tracking-tight">{averageScore.toFixed(2)}</p>
                 </div>
               </div>
             </section>
@@ -140,9 +169,9 @@ export default function JudgeSummaryClient() {
 
               {!loading && rows.length > 0 && (
                 <div className="overflow-x-auto">
-                  <table className="text-sm w-full border-collapse">
-                    <thead>
-                      <tr className="text-left text-[#191c1d]/50 border-b">
+                  <table className="text-xs w-full border-collapse">
+                    <thead className="sticky top-0 bg-white z-10 border-b border-[#f8f8f8]">
+                      <tr>
                         <th className="pb-2 pr-3 font-semibold">เวลา</th>
                         <th className="pb-2 pr-3 font-semibold">นักศึกษา</th>
                         <th className="pb-2 pr-3 font-semibold">ประเภท</th>
@@ -153,10 +182,22 @@ export default function JudgeSummaryClient() {
                     </thead>
                     <tbody>
                       {rows.map((row, index) => (
-                        <tr key={`${row.timestamp}-${row.studentId}-${index}`} className="border-b border-[#f8f8f8] last:border-0 hover:bg-[#fafafa]">
+                        <tr 
+                          key={`${row.timestamp}-${row.studentId}-${index}`} 
+                          className="border-b border-[#f8f8f8] last:border-0 hover:bg-[#fafafa] cursor-pointer transition-colors"
+                          onClick={() => {
+                            const studentDetails = detailedScores.find(s => s.student_id === row.studentId && s.category === row.category);
+                            if (studentDetails) {
+                              setSelectedStudentDetails(studentDetails);
+                              setShowPopup(true);
+                            }
+                          }}
+                        >
                           <td className="py-2 pr-3 text-[#191c1d]/40 whitespace-nowrap">{new Date(row.timestamp).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}</td>
                           <td className="py-2 pr-3">
-                            <div className="font-medium">{row.studentName}</div>
+                            <div className="font-medium text-left hover:text-[#5f00e3] transition-colors">
+                              {row.studentName}
+                            </div>
                             <div className="text-xs text-[#191c1d]/45">{row.studentId}</div>
                           </td>
                           <td className="py-2 pr-3 text-[#191c1d]/60">{row.categoryTitle}</td>
@@ -171,74 +212,126 @@ export default function JudgeSummaryClient() {
               )}
             </section>
 
-            {/* รายละเอียดคะแนนแต่ละข้อ */}
-            {detailedScores.length > 0 && (
-              <section className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)]">
-                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
-                  <h2 className="text-base font-bold">รายละเอียดคะแนนแต่ละข้อ</h2>
-                  <p className="text-xs text-[#191c1d]/45">แสดงคะแนนที่อาจารย์ให้ในแต่ละข้อ</p>
+                      </>
+        )}
+      </div>
+    {/* Popup รายละเอียดคะแนนแต่ละข้อ */}
+      {showPopup && selectedStudentDetails && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-gray-200">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#5f00e3]/10 to-[#7b3ff2]/10 rounded-xl flex items-center justify-center">
+                  <span className="text-lg font-bold text-[#5f00e3]">{selectedStudentDetails.student_name.charAt(0)}</span>
                 </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-[#191c1d]">{selectedStudentDetails.student_name}</h3>
+                  <p className="text-sm text-gray-600">{selectedStudentDetails.student_id} • {selectedStudentDetails.category}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPopup(false)}
+                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all hover:scale-110"
+              >
+                <span className="text-gray-600 text-lg">×</span>
+              </button>
+            </div>
 
-                {loadingDetails && <div className="py-10 text-center text-sm text-[#191c1d]/40 animate-pulse">กำลังโหลดข้อมูลคะแนน...</div>}
-                
-                {!loadingDetails && (
-                  <div className="space-y-4">
-                    {detailedScores.map((submission, idx) => (
-                      <div key={idx} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <h3 className="font-semibold text-sm">{submission.student_name} ({submission.student_id})</h3>
-                            <p className="text-xs text-gray-500">{submission.category}</p>
+            {/* Score Summary */}
+            <div className="mb-6">
+              <div className="bg-gradient-to-r from-[#f3f4f5] to-white rounded-xl p-4 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">คะแนนรวม</span>
+                  <span className="text-2xl font-bold text-[#9f4200]">
+                    {Object.values(selectedStudentDetails.scores).reduce((sum: number, score: any) => sum + (score as number), 0).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Questions List by Topic */}
+            {selectedStudentDetails.scores && typeof selectedStudentDetails.scores === 'object' && (
+              <div className="space-y-6">
+                {(() => {
+                  const categoryConfig = CATEGORY_CONFIG[selectedStudentDetails.category as keyof typeof CATEGORY_CONFIG];
+                  if (!categoryConfig) return null;
+                  
+                  return categoryConfig.topics.map((topic, topicIndex) => {
+                    // หาข้อคำถามที่เกี่ยวข้อกับ topic นี้
+                    const topicQuestions = topic.questions.filter(q => selectedStudentDetails.scores[q.id] !== undefined);
+                    const topicScores = topicQuestions.map(q => ({
+                      id: q.id,
+                      text: q.text,
+                      score: selectedStudentDetails.scores[q.id] as number,
+                      max: q.max
+                    }));
+                    
+                    const topicTotal = topicScores.reduce((sum, item) => sum + item.score, 0);
+                    const topicMax = topicScores.reduce((sum, item) => sum + item.max, 0);
+                    const topicPercentage = topicMax > 0 ? (topicTotal / topicMax) * 100 : 0;
+                    
+                    return (
+                      <div key={topic.id} className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border border-gray-200">
+                        {/* Topic Header */}
+                        <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#5f00e3]/10 to-[#7b3ff2]/10 rounded-xl flex items-center justify-center">
+                              <span className="text-lg font-bold text-[#5f00e3]">{topicIndex + 1}</span>
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-bold text-[#191c1d]">{topic.title}</h3>
+                              <div className="text-sm text-gray-500">{topicScores.length} ข้อ</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-2xl font-bold text-[#9f4200]">{topicTotal}</span>
+                              <span className="text-sm text-gray-400">/{topicMax}</span>
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">{topicPercentage.toFixed(1)}%</div>
                           </div>
                         </div>
                         
-                        {submission.scores && typeof submission.scores === 'object' && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {Object.entries(submission.scores).map(([questionId, score]) => {
-                              // หาข้อความของคำถามจาก config
-                              const categoryConfig = CATEGORY_CONFIG[submission.category as keyof typeof CATEGORY_CONFIG];
-                              let questionText = questionId;
-                              
-                              if (categoryConfig) {
-                                for (const topic of categoryConfig.topics) {
-                                  const question = topic.questions.find(q => q.id === questionId);
-                                  if (question) {
-                                    // แยกเฉพาะส่วนแรกของคำถาม (แค่ 5-6 คำแรก)
-                                    const words = question.text.split(' ');
-                                    questionText = words.slice(0, 6).join(' ');
-                                    break;
-                                  }
-                                }
-                              }
-                              
-                              return (
-                                <div key={questionId} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                                  <div className="flex justify-between items-center gap-3">
-                                    <div className="flex-1 min-w-0">
-                                      <div className="text-xs font-medium text-gray-700 truncate" title={questionText}>
-                                        {questionText}
+                        {/* Questions */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {topicScores.map((item) => {
+                            // แยกหัวข้อและรายละเอียด
+                            const parts = item.text.split(/ มีการ| โดย| และ| ทั้ง| อันเนื่องมาจาก| ที่นำไป| ซึ่ง| ผู้มี| 1\)|2\)/);
+                            const questionText = parts[0]?.trim() || item.text;
+                            const percentage = item.max > 0 ? (item.score / item.max) * 100 : 0;
+                            
+                            return (
+                              <div key={item.id} className="bg-white rounded-xl p-4 border border-gray-100">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                                        <span className="text-xs font-bold text-gray-600">{item.id.split('_')[1]}</span>
                                       </div>
+                                      <h4 className="text-sm font-semibold text-[#191c1d] leading-tight">{questionText}</h4>
                                     </div>
-                                    <div className="flex-shrink-0">
-                                      <span className="inline-flex items-center justify-center w-10 h-10 bg-white rounded-full border-2 border-[#9f4200] text-sm font-bold text-[#9f4200]">
-                                        {score as number}
-                                      </span>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                    <div className="flex items-baseline gap-1">
+                                      <span className="text-lg font-bold text-[#9f4200]">{item.score}</span>
+                                      <span className="text-xs text-gray-400">/{item.max}</span>
                                     </div>
                                   </div>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </section>
+                    );
+                  });
+                })()}
+              </div>
             )}
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
