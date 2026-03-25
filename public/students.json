@@ -252,6 +252,18 @@
     "category": "social-huma"
   },
   {
+    "id": "S005",
+    "name": "Miss Aye Mary",
+    "program": "BBA (International Program)",
+    "school": "วิทยาลัยนานาชาติ",
+    "phone": "0659327321",
+    "lineId": "@ayemary",
+    "workplace": "Manatal Co., Ltd",
+    "project": "Automating Sales Operations using Workflows and AI Agents",
+    "thaiCategory": "สังคมศาสตร์ และมนุษยศาสตร์",
+    "category": "social-huma"
+  },
+  {
     "id": "S001",
     "name": "นายธณาวุฒิ ประมวลศิลป์",
     "program": "วิทยาศาสตร์",
