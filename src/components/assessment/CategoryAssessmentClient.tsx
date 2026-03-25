@@ -54,7 +54,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
     let alive = true;
     const run = async () => {
       try {
-        const res = await fetch("/students.json", { cache: "force-cache" });
+        const res = await fetch("/students.json", { cache: "no-store" });
         if (!res.ok) {
           throw new Error("โหลดรายชื่อนักศึกษาไม่สำเร็จ");
         }

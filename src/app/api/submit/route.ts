@@ -52,10 +52,14 @@ export async function POST(req: Request) {
       maxScore,
     };
 
+    console.log("=== Submit Debug ===");
+    console.log("Payload:", JSON.stringify(payload, null, 2));
+    
     await saveSubmission(payload);
 
     return Response.json({ ok: true });
   } catch (error) {
+    console.error("Submit Error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
     return Response.json({ error: message }, { status: 500 });
   }
