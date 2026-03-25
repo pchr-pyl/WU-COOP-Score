@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ระบบให้คะแนนการประกวด</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Surfaces */
+      --surface:                #f8f9fa;
+      --surface-bright:         #f5f6f7;
+      --surface-container-low:  #f3f4f5;
+      --surface-container:      #eeeff0;
+      --surface-container-high: #e8e9ea;
+      --surface-container-highest: #e2e3e4;
+      --surface-container-lowest: #ffffff;
+      --background:             #f8f9fa;
+
+      /* Brand */
+      --primary:           #9f4200;
+      --primary-container: #fe6c00;
+      --primary-gradient:  linear-gradient(135deg, #9f4200 0%, #fe6c00 100%);
+      --secondary:         #5f00e3;
+      --secondary-container: #e8d6ff;
+      --on-secondary-container: #3a0087;
+      --secondary-fixed-dim:    #c4aaee;
+
+      /* On-colors */
+      --on-surface:        #191c1d;
+      --on-surface-variant:#4a4a4a;
+      --on-primary:        #ffffff;
+      --outline-variant:   #e2bfb0;
+
+      /* Tokens */
+      --radius-sm:   0.5rem;
+      --radius-md:   0.75rem;
+      --radius-lg:   1.25rem;
+      --radius-xl:   1.5rem;
+      --radius-full: 100px;
+      --shadow-ambient: 0 20px 40px rgba(25,28,29,0.04);
+      --shadow-card:    0 8px 32px rgba(25,28,29,0.06);
+      --transition:     all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--background);
+      color: var(--on-surface);
+      min-height: 100vh;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Progress Bar ── */
+    #progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 4px;
+      background: var(--primary-gradient);
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1000;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ── Glassmorphism Header ── */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(248,249,250,0.80);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 1rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+    }
+    .header-brand .eyebrow {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .header-brand .wordmark {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--on-surface);
+    }
+    .header-meta {
+      font-size: 0.8rem;
+      color: var(--on-surface-variant);
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .judge-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface-container-low);
+      padding: 0.35rem 0.85rem;
+      border-radius: var(--radius-full);
+    }
+    .judge-badge .dot {
+      width: 7px; height: 7px;
+      background: var(--primary-gradient);
+      border-radius: 50%;
+    }
+
+    /* ── Layout ── */
+    .page-wrapper {
+      max-width: 940px;
+      margin: 0 auto;
+      padding: 4rem 2rem 6rem;
+    }
+
+    /* ── Hero Section ── */
+    .hero {
+      margin-bottom: 4rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 2rem;
+    }
+    .hero-number {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: clamp(4rem, 12vw, 7rem);
+      font-weight: 800;
+      color: var(--secondary);
+      opacity: 0.08;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      user-select: none;
+    }
+    .hero-text .category-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    .hero-text h1 {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: var(--on-surface);
+    }
+    .hero-text p {
+      margin-top: 0.75rem;
+      font-size: 0.95rem;
+      color: var(--on-surface-variant);
+      max-width: 480px;
+      line-height: 1.8;
+    }
+
+    /* ── Category Selector ── */
+    .section-label {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+    }
+
+    .category-tabs {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 3.5rem;
+    }
+    .cat-tab {
+      padding: 0.55rem 1.2rem;
+      border-radius: var(--radius-full);
+      border: none;
+      cursor: pointer;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: var(--surface-container-high);
+      color: var(--on-surface-variant);
+      transition: var(--transition);
+      outline: none;
+    }
+    .cat-tab:hover {
+      background: var(--surface-container-highest);
+      color: var(--on-surface);
+    }
+    .cat-tab.active {
+      background: var(--secondary-container);
+      color: var(--on-secondary-container);
+      font-weight: 600;
+    }
+
+    /* ── Contestant Card ── */
+    .contestant-card {
+      background: var(--surface-container-lowest);
+      border-radius: var(--radius-xl);
+      padding: 2rem 2.5rem;
+      box-shadow: var(--shadow-ambient);
+      margin-bottom: 2.5rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 2rem;
+    }
+    .contestant-avatar {
+      width: 56px; height: 56px;
+      border-radius: var(--radius-md);
+      background: var(--secondary-container);
+      display: grid;
+      place-items: center;
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--on-secondary-container);
+    }
+    .contestant-info .name {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--on-surface);
+    }
+    .contestant-info .meta {
+      font-size: 0.8rem;
+      color: var(--on-surface-variant);
+      margin-top: 0.25rem;
+    }
+    .contestant-score-display {
+      text-align: right;
+    }
+    .contestant-score-display .total-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+      margin-bottom: 0.2rem;
+    }
+    .contestant-score-display .total-value {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    .contestant-score-display .total-max {
+      font-size: 0.75rem;
+      color: var(--on-surface-variant);
+      margin-top: 0.15rem;
+    }
+
+    /* ── Focus Card (Scoring Criteria) ── */
+    .focus-card {
+      background: var(--surface-container-lowest);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .focus-card-header {
+      background: var(--surface-container-low);
+      padding: 1.5rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .focus-card-header .criteria-group {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--on-surface);
+    }
+    .focus-card-header .criteria-hint {
+      font-size: 0.78rem;
+      color: var(--on-surface-variant);
+      margin-top: 0.2rem;
+    }
+    .criteria-group-max {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--on-surface-variant);
+      background: var(--surface-container);
+      padding: 0.3rem 0.8rem;
+      border-radius: var(--radius-full);
+    }
+
+    .criteria-list {
+      padding: 0.5rem 0;
+    }
+    .criteria-item {
+      padding: 1.8rem 2.5rem;
+      display: grid;
+      grid-template-columns: 2rem 1fr auto;
+      gap: 1.5rem;
+      align-items: start;
+      transition: background 0.2s;
+    }
+    .criteria-item:hover {
+      background: var(--surface-bright);
+    }
+
+    .criteria-num {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--secondary);
+      opacity: 0.35;
+      padding-top: 0.15rem;
+    }
+    .criteria-body {
+      flex: 1;
+    }
+    .criteria-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--on-surface);
+      line-height: 1.5;
+    }
+    .criteria-desc {
+      font-size: 0.78rem;
+      color: var(--on-surface-variant);
+      margin-top: 0.3rem;
+      line-height: 1.7;
+    }
+
+    .score-input-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.75rem;
+      min-width: 180px;
+    }
+
+    /* Score Slider */
+    .score-slider-wrap {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .score-slider-wrap input[type="range"] {
+      -webkit-appearance: none;
+      flex: 1;
+      height: 4px;
+      background: var(--surface-container-high);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .score-slider-wrap input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--secondary);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(95,0,227,0.3);
+      transition: var(--transition);
+    }
+    .score-slider-wrap input[type="range"]:hover::-webkit-slider-thumb {
+      transform: scale(1.2);
+    }
+    .slider-val {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--secondary);
+      min-width: 1.4rem;
+      text-align: right;
+    }
+
+    /* Number Input */
+    .score-stepper {
+      display: flex;
+      align-items: center;
+      background: var(--surface-container-highest);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .score-stepper:focus-within {
+      background: var(--surface-container-lowest);
+      box-shadow: inset 2px 0 0 var(--secondary);
+    }
+    .stepper-btn {
+      width: 32px; height: 36px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--on-surface-variant);
+      display: grid;
+      place-items: center;
+      transition: color 0.2s;
+    }
+    .stepper-btn:hover { color: var(--secondary); }
+    .stepper-input {
+      width: 44px;
+      height: 36px;
+      background: none;
+      border: none;
+      outline: none;
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--on-surface);
+      text-align: center;
+      -moz-appearance: textfield;
+    }
+    .stepper-input::-webkit-inner-spin-button,
+    .stepper-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .score-max {
+      font-size: 0.72rem;
+      color: var(--on-surface-variant);
+      margin-top: 0.2rem;
+    }
+
+    /* ── Comment Box ── */
+    .comment-block {
+      padding: 1.5rem 2.5rem 2rem;
+      border-top: 0; /* No borders — use BG */
+      background: var(--surface-container-low);
+    }
+    .comment-block label {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.6rem;
+    }
+    .comment-block textarea {
+      width: 100%;
+      min-height: 72px;
+      background: var(--surface-container-highest);
+      border: none;
+      outline: none;
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.875rem;
+      color: var(--on-surface);
+      resize: vertical;
+      line-height: 1.7;
+      transition: var(--transition);
+    }
+    .comment-block textarea:focus {
+      background: var(--surface-container-lowest);
+      box-shadow: inset 2px 0 0 var(--secondary);
+    }
+
+    /* ── Summary Bar ── */
+    .summary-bar {
+      background: var(--surface-container-lowest);
+      border-radius: var(--radius-xl);
+      padding: 2rem 2.5rem;
+      box-shadow: var(--shadow-ambient);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 2rem;
+      margin-bottom: 2.5rem;
+    }
+    .summary-breakdown {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .breakdown-item .b-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+      margin-bottom: 0.25rem;
+    }
+    .breakdown-item .b-value {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--on-surface);
+    }
+    .breakdown-item .b-value span {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--on-surface-variant);
+      margin-left: 0.2rem;
+    }
+    .summary-total {
+      text-align: right;
+    }
+    .summary-total .total-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+    .summary-total .big-score {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .summary-total .big-max {
+      font-size: 0.78rem;
+      color: var(--on-surface-variant);
+      margin-top: 0.2rem;
+    }
+
+    /* ── Action Row ── */
+    .action-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+    .btn-secondary {
+      padding: 0.75rem 1.8rem;
+      border-radius: var(--radius-full);
+      border: 1.5px solid rgba(142,113,100,0.20);
+      background: none;
+      color: var(--secondary);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover {
+      background: var(--surface-container-low);
+    }
+    .btn-primary {
+      padding: 0.75rem 2.2rem;
+      border-radius: var(--radius-full);
+      border: none;
+      background: var(--primary-gradient);
+      color: var(--on-primary);
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 20px rgba(159,66,0,0.25);
+      letter-spacing: 0.02em;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(159,66,0,0.32);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 2rem; right: 2rem;
+      background: var(--on-surface);
+      color: var(--surface);
+      padding: 0.9rem 1.5rem;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+      pointer-events: none;
+      z-index: 999;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .page-wrapper { padding: 2.5rem 1.25rem 5rem; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-number { display: none; }
+      .contestant-card { grid-template-columns: auto 1fr; }
+      .contestant-score-display { grid-column: 1/-1; text-align: left; display: flex; align-items: baseline; gap: 0.5rem; }
+      .criteria-item { grid-template-columns: 2rem 1fr; }
+      .score-input-block { grid-column: 2; }
+      .summary-bar { grid-template-columns: 1fr; }
+      .summary-total { text-align: left; }
+      .focus-card-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+      .site-header { padding: 1rem 1.25rem; }
+      .header-meta { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div id="progress-bar" style="width: 0%"></div>
+
+<!-- Glassmorphism Header -->
+<header class="site-header">
+  <div class="header-brand">
+    <span class="eyebrow">Assessment</span>
+    <span class="wordmark">ระบบให้คะแนนการประกวด</span>
+  </div>
+  <div class="header-meta">
+    <span>โครงการประกวด 2568</span>
+    <!-- <div class="judge-badge">
+      <div class="dot"></div>
+      <span>กรรมการ: อาจารย์มนัส</span>
+    </div> -->
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="page-wrapper">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-text">
+      <div class="category-label">Contestant Assessment Form</div>
+      <h1>แบบฟอร์ม<br>ให้คะแนนนักศึกษา</h1>
+      <p>เลือกประเภทการแข่งขัน และให้คะแนนตามเกณฑ์ที่กำหนด<br>
+         คะแนนจะถูกบันทึกโดยอัตโนมัติเมื่อกดยืนยัน</p>
+    </div>
+    <div class="hero-number" aria-hidden="true">01</div>
+  </div>
+
+  <!-- Category Tabs -->
+  <p class="section-label">ประเภทการแข่งขัน</p>
+  <div class="category-tabs" id="categoryTabs">
+    <button class="cat-tab active" data-cat="1">นวัตกรรมเทคโนโลยี</button>
+    <button class="cat-tab" data-cat="2">การออกแบบสร้างสรรค์</button>
+    <button class="cat-tab" data-cat="3">ธุรกิจแผนการตลาด</button>
+    <button class="cat-tab" data-cat="4">สิ่งประดิษฐ์วิทยาศาสตร์</button>
+  </div>
+
+  <!-- Contestant Card -->
+  <div class="contestant-card">
+    <div class="contestant-avatar" id="avatarInitial">TK</div>
+    <div class="contestant-info">
+      <div class="name" id="contestantName">ทีม NEXUS — นายธนกฤต วงศ์สุวรรณ, น.ส.พิชญา อินทร์แก้ว</div>
+      <div class="meta" id="contestantMeta">รหัส 007 &nbsp;·&nbsp; คณะวิศวกรรมศาสตร์ &nbsp;·&nbsp; ชั้นปีที่ 3</div>
+    </div>
+    <div class="contestant-score-display">
+      <div class="total-label">คะแนนรวม</div>
+      <div class="total-value" id="headerTotal">0</div>
+      <div class="total-max" id="headerMax">/ 100 คะแนน</div>
+    </div>
+  </div>
+
+  <!-- Scoring Sections (dynamically rendered) -->
+  <div id="scoringSections"></div>
+
+  <!-- Summary Bar -->
+  <div class="summary-bar">
+    <div class="summary-breakdown" id="summaryBreakdown"></div>
+    <div class="summary-total">
+      <div class="total-label">คะแนนสุทธิ</div>
+      <div class="big-score" id="bigScore">0</div>
+      <div class="big-max" id="bigMax">จาก 100 คะแนน</div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-row">
+    <button class="btn-secondary" onclick="resetForm()">รีเซ็ต</button>
+    <button class="btn-primary" onclick="submitForm()">ยืนยันการให้คะแนน &rarr;</button>
+  </div>
+
+</main>
+
+<!-- Toast -->
+<div id="toast">✓ บันทึกคะแนนเรียบร้อยแล้ว</div>
+
+<script>
+  /* ── Category Data ── */
+  const categories = {
+    1: {
+      name: "นวัตกรรมเทคโนโลยี",
+      contestant: { initials: "TK", name: "ทีม NEXUS — นายธนกฤต วงศ์สุวรรณ, น.ส.พิชญา อินทร์แก้ว", meta: "รหัส 007 · คณะวิศวกรรมศาสตร์ · ชั้นปีที่ 3" },
+      totalMax: 100,
+      groups: [
+        {
+          name: "ความคิดสร้างสรรค์และความแปลกใหม่",
+          hint: "ประเมินความโดดเด่นของแนวคิดและการนำเสนอ",
+          max: 30,
+          criteria: [
+            { name: "ความเป็นต้นฉบับของแนวคิด", desc: "ผลงานมีความคิดสร้างสรรค์และมีความเป็นต้นฉบับสูง", max: 10 },
+            { name: "ความสามารถในการแก้ปัญหา", desc: "ผลงานแก้ไขปัญหาที่มีอยู่จริงได้อย่างมีประสิทธิภาพ", max: 10 },
+            { name: "ศักยภาพด้านนวัตกรรม", desc: "มีแนวโน้มที่จะพัฒนาต่อยอดได้ในอนาคต", max: 10 },
+          ]
+        },
+        {
+          name: "ความสำเร็จทางเทคนิค",
+          hint: "ประเมินคุณภาพการพัฒนาและความสมบูรณ์ของระบบ",
+          max: 40,
+          criteria: [
+            { name: "ความสมบูรณ์ของระบบ (Functionality)", desc: "ระบบทำงานได้อย่างถูกต้องครบถ้วนตามวัตถุประสงค์", max: 15 },
+            { name: "คุณภาพของโค้ด / การออกแบบ", desc: "โครงสร้างการพัฒนามีมาตรฐานและสามารถบำรุงรักษาได้", max: 15 },
+            { name: "ความสามารถในการขยายระบบ (Scalability)", desc: "สามารถรองรับผู้ใช้งานหรือข้อมูลที่เพิ่มขึ้นได้", max: 10 },
+          ]
+        },
+        {
+          name: "การนำเสนอและการสื่อสาร",
+          hint: "ประเมินความชัดเจนในการพรีเซนต์และตอบคำถาม",
+          max: 30,
+          criteria: [
+            { name: "ความชัดเจนของการนำเสนอ", desc: "อธิบายผลงานได้ชัดเจน เข้าใจง่าย ตรงประเด็น", max: 10 },
+            { name: "ความสามารถในการตอบคำถาม", desc: "ตอบคำถามกรรมการได้อย่างมั่นใจและถูกต้อง", max: 10 },
+            { name: "คุณภาพสื่อประกอบการนำเสนอ", desc: "สไลด์ / demo มีความสวยงาม เป็นระบบ อ่านง่าย", max: 10 },
+          ]
+        }
+      ]
+    },
+    2: {
+      name: "การออกแบบสร้างสรรค์",
+      contestant: { initials: "DC", name: "ทีม AURORA — น.ส.ชลธิชา มณีรัตน์, น.ส.อภิญญา สุขสวัสดิ์", meta: "รหัส 012 · คณะสถาปัตยกรรมศาสตร์ · ชั้นปีที่ 4" },
+      totalMax: 100,
+      groups: [
+        {
+          name: "ความงามและสุนทรียภาพ",
+          hint: "ประเมินคุณค่าทางด้านศิลปะและความสวยงาม",
+          max: 35,
+          criteria: [
+            { name: "องค์ประกอบและความสวยงามโดยรวม", desc: "ผลงานมีความสมดุล สวยงาม และน่าดึงดูด", max: 15 },
+            { name: "ความสม่ำเสมอของสไตล์ (Visual Consistency)", desc: "สีสัน รูปแบบ และฟอนต์มีความเป็นเอกภาพ", max: 10 },
+            { name: "ความคิดสร้างสรรค์ทางศิลปะ", desc: "แสดงออกถึงเอกลักษณ์และมุมมองที่ไม่ซ้ำใคร", max: 10 },
+          ]
+        },
+        {
+          name: "ความสามารถในการใช้งาน (Usability)",
+          hint: "ประเมินว่าดีไซน์ใช้งานได้จริงในบริบทที่ตั้งใจ",
+          max: 35,
+          criteria: [
+            { name: "ความชัดเจนของสารและวัตถุประสงค์", desc: "สื่อสารจุดประสงค์ได้ชัดเจน เข้าใจได้ทันที", max: 15 },
+            { name: "ประสบการณ์ผู้ใช้ (UX)", desc: "การออกแบบช่วยให้ผู้ใช้บรรลุเป้าหมายได้โดยไม่ติดขัด", max: 10 },
+            { name: "ความเหมาะสมกับกลุ่มเป้าหมาย", desc: "รูปแบบและโทนตรงกับกลุ่มผู้ใช้งานที่ตั้งใจ", max: 10 },
+          ]
+        },
+        {
+          name: "กระบวนการและการนำเสนอ",
+          hint: "ประเมินกระบวนการคิดและคุณภาพการนำเสนอ",
+          max: 30,
+          criteria: [
+            { name: "ความสมบูรณ์ของ Design Process", desc: "มี Research, Wireframe, Prototype ครบถ้วน", max: 10 },
+            { name: "ความสามารถในการอธิบายการตัดสินใจ", desc: "อธิบาย Design Decision ได้ชัดเจนและมีเหตุผล", max: 10 },
+            { name: "ความพร้อมของงาน", desc: "ผลงานสมบูรณ์พร้อมส่งมอบจริง", max: 10 },
+          ]
+        }
+      ]
+    },
+    3: {
+      name: "ธุรกิจแผนการตลาด",
+      contestant: { initials: "BM", name: "ทีม APEX — นายศุภวิชญ์ รัตนโชค, น.ส.วรัญญา ประภาส", meta: "รหัส 021 · คณะบริหารธุรกิจ · ชั้นปีที่ 3" },
+      totalMax: 100,
+      groups: [
+        {
+          name: "การวิเคราะห์และกลยุทธ์",
+          hint: "ประเมินความลึกของการวิเคราะห์ตลาดและการวางกลยุทธ์",
+          max: 40,
+          criteria: [
+            { name: "การวิเคราะห์ตลาดและคู่แข่ง", desc: "วิเคราะห์ตลาด SWOT / PESTEL ได้ครอบคลุมและถูกต้อง", max: 15 },
+            { name: "ความชัดเจนของกลุ่มเป้าหมาย (Target Segment)", desc: "กำหนดลูกค้าเป้าหมายได้ชัดเจน มีข้อมูลรองรับ", max: 15 },
+            { name: "ความเป็นไปได้ของกลยุทธ์", desc: "กลยุทธ์ที่เสนอมีความเป็นไปได้จริงในทางปฏิบัติ", max: 10 },
+          ]
+        },
+        {
+          name: "แผนการดำเนินงานและงบประมาณ",
+          hint: "ประเมินความสมบูรณ์ของแผนการลงทุนและการเงิน",
+          max: 30,
+          criteria: [
+            { name: "แผน Action Plan ที่ชัดเจน", desc: "มี Timeline และขั้นตอนปฏิบัติที่ชัดเจน", max: 10 },
+            { name: "การประมาณการณ์ทางการเงิน", desc: "ประมาณ ROI และค่าใช้จ่ายได้อย่างสมเหตุสมผล", max: 10 },
+            { name: "KPI และตัวชี้วัดความสำเร็จ", desc: "กำหนด KPI ที่วัดได้และสอดคล้องกับเป้าหมาย", max: 10 },
+          ]
+        },
+        {
+          name: "การนำเสนอและการโน้มน้าวใจ",
+          hint: "ประเมินทักษะการสื่อสารและความน่าเชื่อถือ",
+          max: 30,
+          criteria: [
+            { name: "ทักษะการนำเสนอ", desc: "พูดได้ชัดเจน มีความมั่นใจ และน่าเชื่อถือ", max: 10 },
+            { name: "ความสามารถในการโน้มน้าวใจ", desc: "ข้อมูลที่นำเสนอทำให้เชื่อในแนวคิดธุรกิจ", max: 10 },
+            { name: "การตอบคำถามและข้อโต้แย้ง", desc: "ตอบได้ตรงประเด็น รับมือกับข้อโต้แย้งได้ดี", max: 10 },
+          ]
+        }
+      ]
+    },
+    4: {
+      name: "สิ่งประดิษฐ์วิทยาศาสตร์",
+      contestant: { initials: "SI", name: "ทีม HELIX — นายปิยะ ตรีทิพย์, น.ส.สุรีรัตน์ โกมล", meta: "รหัส 035 · คณะวิทยาศาสตร์ · ชั้นปีที่ 2" },
+      totalMax: 100,
+      groups: [
+        {
+          name: "หลักการทางวิทยาศาสตร์",
+          hint: "ประเมินความถูกต้องและความเข้มแข็งของพื้นฐานทางวิทยาศาสตร์",
+          max: 35,
+          criteria: [
+            { name: "ความถูกต้องของทฤษฎีที่ใช้", desc: "อ้างอิงหลักการทางวิทยาศาสตร์ได้ถูกต้องและครบถ้วน", max: 15 },
+            { name: "ระเบียบวิธีการวิจัย", desc: "กระบวนการทดลองมีความรัดกุม ควบคุมตัวแปรได้ดี", max: 10 },
+            { name: "ความน่าเชื่อถือของข้อมูล", desc: "ข้อมูลที่เก็บรวบรวมมีความน่าเชื่อถือ สามารถทำซ้ำได้", max: 10 },
+          ]
+        },
+        {
+          name: "ความเป็นต้นฉบับและประโยชน์",
+          hint: "ประเมินความดั้งเดิมของงานและประโยชน์ในเชิงปฏิบัติ",
+          max: 35,
+          criteria: [
+            { name: "ความเป็นต้นฉบับของสิ่งประดิษฐ์", desc: "ไม่ซ้ำของเดิม มีลักษณะเฉพาะและแตกต่าง", max: 15 },
+            { name: "ประโยชน์ในชีวิตจริง", desc: "สิ่งประดิษฐ์มีประโยชน์และสามารถนำไปใช้งานได้จริง", max: 10 },
+            { name: "ศักยภาพในการพัฒนาต่อ", desc: "มีแนวทางการพัฒนาที่ชัดเจนในอนาคต", max: 10 },
+          ]
+        },
+        {
+          name: "การนำเสนอผลงาน",
+          hint: "ประเมินความสมบูรณ์ของรายงานและการนำเสนอ",
+          max: 30,
+          criteria: [
+            { name: "ความสมบูรณ์ของรายงาน", desc: "มีบทคัดย่อ วิธีดำเนินการ ผลการทดลอง และบทสรุป", max: 10 },
+            { name: "คุณภาพการนำเสนอด้วยวาจา", desc: "นำเสนอได้ชัดเจน ถูกต้อง และเข้าใจง่าย", max: 10 },
+            { name: "การตอบคำถามเชิงวิทยาศาสตร์", desc: "ตอบคำถามได้อย่างลึกซึ้งและมีความรู้รองรับ", max: 10 },
+          ]
+        }
+      ]
+    }
+  };
+
+  /* ── State ── */
+  let currentCat = 1;
+  const scores = {}; // key: `g${gi}c${ci}`, value: number
+
+  /* ── Render Criteria ── */
+  function renderSections(catId) {
+    const cat = categories[catId];
+    const container = document.getElementById('scoringSections');
+    container.innerHTML = '';
+
+    // Update contestant card
+    document.getElementById('contestantName').textContent = cat.contestant.name;
+    document.getElementById('contestantMeta').textContent = cat.contestant.meta;
+    document.getElementById('avatarInitial').textContent = cat.contestant.initials;
+    document.getElementById('headerMax').textContent = `/ ${cat.totalMax} คะแนน`;
+    document.getElementById('bigMax').textContent = `จาก ${cat.totalMax} คะแนน`;
+
+    cat.groups.forEach((group, gi) => {
+      const card = document.createElement('div');
+      card.className = 'focus-card';
+      card.style.setProperty('--delay', `${gi * 80}ms`);
+
+      let criteriaHTML = '';
+      group.criteria.forEach((crit, ci) => {
+        const key = `g${gi}c${ci}`;
+        const val = scores[key] ?? 0;
+        const num = String(ci + 1).padStart(2, '0');
+        criteriaHTML += `
+          <div class="criteria-item">
+            <div class="criteria-num">${num}</div>
+            <div class="criteria-body">
+              <div class="criteria-name">${crit.name}</div>
+              <div class="criteria-desc">${crit.desc}</div>
+            </div>
+            <div class="score-input-block">
+              <div class="score-stepper">
+                <button class="stepper-btn" onclick="adjustScore('${key}', -1, ${crit.max})" aria-label="ลดคะแนน">−</button>
+                <input class="stepper-input" id="inp-${key}" type="number"
+                  min="0" max="${crit.max}" value="${val}"
+                  onchange="setScore('${key}', +this.value, ${crit.max})"
+                  oninput="setScore('${key}', +this.value, ${crit.max})"
+                  aria-label="คะแนน ${crit.name}" />
+                <button class="stepper-btn" onclick="adjustScore('${key}', +1, ${crit.max})" aria-label="เพิ่มคะแนน">+</button>
+              </div>
+              <div class="score-slider-wrap">
+                <input type="range" id="sl-${key}" min="0" max="${crit.max}" value="${val}"
+                  oninput="syncFromSlider('${key}', +this.value, ${crit.max})" aria-label="สไลเดอร์ ${crit.name}" />
+                <span class="slider-val" id="sv-${key}">${val}</span>
+              </div>
+              <div class="score-max">เต็ม ${crit.max} คะแนน</div>
+            </div>
+          </div>`;
+      });
+
+      card.innerHTML = `
+        <div class="focus-card-header">
+          <div>
+            <div class="criteria-group">${group.name}</div>
+            <div class="criteria-hint">${group.hint}</div>
+          </div>
+          <div class="criteria-group-max">เต็ม ${group.max} คะแนน</div>
+        </div>
+        <div class="criteria-list">${criteriaHTML}</div>
+        <div class="comment-block">
+          <label>หมายเหตุ / ความเห็นเพิ่มเติม</label>
+          <textarea placeholder="บันทึกข้อสังเกตของกรรมการ..." id="note-g${gi}" rows="2"></textarea>
+        </div>`;
+
+      container.appendChild(card);
+    });
+
+    updateTotals();
+  }
+
+  /* ── Score Logic ── */
+  function setScore(key, val, max) {
+    val = Math.max(0, Math.min(max, isNaN(val) ? 0 : Math.round(val)));
+    scores[key] = val;
+    const inp = document.getElementById('inp-' + key);
+    const sl  = document.getElementById('sl-'  + key);
+    const sv  = document.getElementById('sv-'  + key);
+    if (inp) inp.value = val;
+    if (sl)  sl.value  = val;
+    if (sv)  sv.textContent = val;
+    updateTotals();
+  }
+
+  function adjustScore(key, delta, max) {
+    const cur = scores[key] ?? 0;
+    setScore(key, cur + delta, max);
+  }
+
+  function syncFromSlider(key, val, max) {
+    setScore(key, val, max);
+  }
+
+  /* ── Totals ── */
+  function updateTotals() {
+    const cat = categories[currentCat];
+    let grandTotal = 0;
+    const breakdownEl = document.getElementById('summaryBreakdown');
+    breakdownEl.innerHTML = '';
+
+    cat.groups.forEach((group, gi) => {
+      let groupTotal = 0;
+      group.criteria.forEach((crit, ci) => {
+        groupTotal += scores[`g${gi}c${ci}`] ?? 0;
+      });
+      grandTotal += groupTotal;
+
+      const item = document.createElement('div');
+      item.className = 'breakdown-item';
+      item.innerHTML = `
+        <div class="b-label">${group.name.length > 20 ? group.name.substring(0,20) + '…' : group.name}</div>
+        <div class="b-value">${groupTotal}<span>/ ${group.max}</span></div>`;
+      breakdownEl.appendChild(item);
+    });
+
+    document.getElementById('headerTotal').textContent = grandTotal;
+    document.getElementById('bigScore').textContent    = grandTotal;
+
+    // Progress bar
+    const pct = (grandTotal / cat.totalMax) * 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+  }
+
+  /* ── Tab Switching ── */
+  document.getElementById('categoryTabs').addEventListener('click', e => {
+    const btn = e.target.closest('.cat-tab');
+    if (!btn) return;
+    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    // Clear scores for new category
+    for (const k in scores) delete scores[k];
+    currentCat = +btn.dataset.cat;
+    const heroNum = document.querySelector('.hero-number');
+    if (heroNum) heroNum.textContent = String(currentCat).padStart(2,'0');
+    renderSections(currentCat);
+  });
+
+  /* ── Reset ── */
+  function resetForm() {
+    for (const k in scores) delete scores[k];
+    document.querySelectorAll('.stepper-input').forEach(i => i.value = 0);
+    document.querySelectorAll('input[type="range"]').forEach(s => s.value = 0);
+    document.querySelectorAll('.slider-val').forEach(v => v.textContent = '0');
+    document.querySelectorAll('textarea').forEach(t => t.value = '');
+    updateTotals();
+    showToast('รีเซ็ตคะแนนเรียบร้อยแล้ว');
+  }
+
+  /* ── Submit ── */
+  function submitForm() {
+    const cat = categories[currentCat];
+    let grandTotal = 0;
+    cat.groups.forEach((g, gi) => g.criteria.forEach((_, ci) => { grandTotal += scores[`g${gi}c${ci}`] ?? 0; }));
+    showToast(`✓ บันทึกคะแนน ${cat.name} — ${grandTotal} / ${cat.totalMax} คะแนน`);
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3200);
+  }
+
+  /* ── Init ── */
+  renderSections(1);
+</script>
+</body>
+</html>
