@@ -238,7 +238,6 @@ export default function JudgeSummaryClient() {
                         <th className="pb-2 pr-3 font-semibold">ประเภท</th>
                         <th className="pb-2 pr-3 font-semibold">สถานที่</th>
                         <th className="pb-2 pr-3 font-semibold text-right">คะแนน</th>
-                        <th className="pb-2 font-semibold text-right">%</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -264,7 +263,6 @@ export default function JudgeSummaryClient() {
                           <td className="py-2 pr-3 text-[#191c1d]/60">{row.categoryTitle}</td>
                           <td className="py-2 pr-3 text-[#191c1d]/60">{row.workplace}</td>
                           <td className="py-2 pr-3 text-right tabular-nums font-semibold">{row.totalScore}/{row.maxScore}</td>
-                          <td className="py-2 text-right tabular-nums font-semibold">{row.pct.toFixed(2)}%</td>
                         </tr>
                       ))}
                     </tbody>
