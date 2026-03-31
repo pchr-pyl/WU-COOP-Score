@@ -141,11 +141,19 @@ export async function saveSubmission(payload: SubmitPayload) {
   }
 }
 
-export async function fetchDashboardData(): Promise<DashboardData> {
+export async function fetchDashboardData(tableName: string = 'score_submissions'): Promise<DashboardData> {
+  // กำหนดชื่อ view ตามตาราง
+  const studentView = tableName === 'score_submissions' 
+    ? 'v_student_score_summary' 
+    : 'v_network_student_score_summary';
+  const categoryView = tableName === 'score_submissions'
+    ? 'v_category_score_summary'
+    : 'v_network_category_score_summary';
+
   const [rowsResponse, studentsResponse, categoriesResponse] = await Promise.all([
     fetch(
     buildRestUrl(
-      "/score_submissions",
+      `/${tableName}`,
       "select=submitted_at,category,category_title,student_id,student_name,student_program,student_school,student_workplace,student_project,judge_id,judge_name,judge_dept,total_score,max_score,score_pct&order=submitted_at.desc",
     ),
     {
@@ -158,7 +166,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   ),
     fetch(
       buildRestUrl(
-        "/v_student_score_summary",
+        `/${studentView}`,
         "select=student_id,student_name,category,category_title,program,school,workplace,project,judge_count,avg_score,max_score,avg_pct,scores,last_submitted_at&order=avg_pct.desc,last_submitted_at.desc",
       ),
       {
@@ -171,7 +179,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     ),
     fetch(
       buildRestUrl(
-        "/v_category_score_summary",
+        `/${categoryView}`,
         "select=category,category_title,submission_count,avg_pct,last_updated",
       ),
       {

@@ -121,13 +121,14 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [activeRound, setActiveRound] = useState<"university" | "network">("network"); // เริ่มที่รอบเครือข่าย
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/dashboard", { cache: "no-store" });
+      const res = await fetch(`/api/dashboard?round=${activeRound}`, { cache: "no-store" });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "fetch error");
       setData(json as DashboardData);
@@ -137,7 +138,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeRound]);
 
   useEffect(() => {
     fetchData();
@@ -212,6 +213,32 @@ export default function DashboardPage() {
                 {loading ? "กำลังโหลด..." : "รีเฟรช"}
               </button>
             </div>
+          </div>
+          
+          {/* Round Tabs */}
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={() => setActiveRound("university")}
+              className={[
+                "flex-1 px-6 py-3 rounded-xl text-sm font-bold transition-all",
+                activeRound === "university"
+                  ? "bg-gradient-to-br from-[#5f00e3] to-[#7b3ff2] text-white shadow-lg"
+                  : "bg-white text-[#191c1d]/70 hover:bg-[#f3f4f5] shadow-md",
+              ].join(" ")}
+            >
+              🏛️ รอบมหาวิทยาลัย
+            </button>
+            <button
+              onClick={() => setActiveRound("network")}
+              className={[
+                "flex-1 px-6 py-3 rounded-xl text-sm font-bold transition-all",
+                activeRound === "network"
+                  ? "bg-gradient-to-br from-[#5f00e3] to-[#7b3ff2] text-white shadow-lg"
+                  : "bg-white text-[#191c1d]/70 hover:bg-[#f3f4f5] shadow-md",
+              ].join(" ")}
+            >
+              🌐 รอบเครือข่าย
+            </button>
           </div>
         </header>
 

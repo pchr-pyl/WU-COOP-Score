@@ -8,14 +8,18 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const includeScores = url.searchParams.get('includeScores') === 'true';
     const judgeId = url.searchParams.get('judgeId');
+    const round = url.searchParams.get('round') || 'network'; // default เป็นรอบเครือข่าย
 
-    const data = await fetchDashboardData();
+    // เลือกตารางตามรอบ
+    const tableName = round === 'university' ? 'score_submissions' : 'network_score_submissions';
+
+    const data = await fetchDashboardData(tableName);
 
     // ถ้าต้องการข้อมูลคะแนนรายข้อ
     if (includeScores && judgeId) {
       // ดึงข้อมูลคะแนนรายข้อจาก Supabase
       const detailedResponse = await fetch(
-        buildRestUrl("/score_submissions", `select=scores,student_id,student_name,category&judge_id=eq.${judgeId}`),
+        buildRestUrl(`/${tableName}`, `select=scores,student_id,student_name,category&judge_id=eq.${judgeId}`),
         {
           method: "GET",
           headers: {
