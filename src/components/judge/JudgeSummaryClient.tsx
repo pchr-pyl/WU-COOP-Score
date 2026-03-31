@@ -346,7 +346,12 @@ export default function JudgeSummaryClient() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-600">คะแนนรวม</span>
                   <span className="text-2xl font-bold text-[#9f4200]">
-                    {Object.values(selectedStudentDetails.scores).reduce((sum: number, score: any) => sum + (score as number), 0).toFixed(2)}
+                    {isEditMode
+                      ? Object.entries(selectedStudentDetails.scores as Record<string, number>)
+                          .reduce((sum, [k]) => sum + (parseFloat(editScores[k] ?? '0') || 0), 0)
+                          .toFixed(2)
+                      : Object.values(selectedStudentDetails.scores).reduce((sum: number, score: any) => sum + (score as number), 0).toFixed(2)
+                    }
                   </span>
                 </div>
               </div>
