@@ -107,7 +107,7 @@ function mapStudentSummaryRecord(record: StudentSummaryRecord): StudentSummary {
 }
 
 export async function saveSubmission(payload: SubmitPayload) {
-  const response = await fetch(buildRestUrl("/score_submissions", "on_conflict=judge_id,student_id,category"), {
+  const response = await fetch(buildRestUrl("/network_score_submissions", "on_conflict=judge_id,student_id,category"), {
     method: "POST",
     headers: {
       ...createHeaders(),

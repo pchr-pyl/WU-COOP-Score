@@ -49,7 +49,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
   const [scores, setScores] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
-  const [completedSubmissions, setCompletedSubmissions] = useState<Set<string>>(new Set());
+  const [completedSubmissions, setCompletedSubmissions] = useState<Map<string, { total: number; max: number }>>(new Map());
 
   useEffect(() => {
     let alive = true;
@@ -76,25 +76,32 @@ export default function CategoryAssessmentClient({ config }: Props) {
     };
   }, [config.key]);
 
-  // ดึงข้อมูลการประเมินที่เสร็จแล้วจาก dashboard
+  // ดึงข้อมูลการประเมินของกรรมการคนนี้จาก dashboard
   useEffect(() => {
+    if (!selectedJudge) {
+      setCompletedSubmissions(new Map());
+      return;
+    }
     let alive = true;
     const run = async () => {
       try {
         const res = await fetch("/api/dashboard");
         if (!res.ok) return;
-        
+
         const data = await res.json();
         if (!alive) return;
-        
-        // สร้าง Set ของนักศึกษาที่ถูกประเมินแล้วในหมวดนี้
-        const completed = new Set<string>();
+
+        // สร้าง Map ของนักศึกษาที่ถูกประเมินแล้วโดยกรรมการคนนี้เท่านั้น
+        const completed = new Map<string, { total: number; max: number }>();
         data.rows?.forEach((row: any) => {
-          if (row.category === config.key) {
-            completed.add(row.studentId);
+          if (row.category === config.key && row.judgeId === selectedJudge.id) {
+            completed.set(row.studentId, {
+              total: Number(row.totalScore),
+              max: Number(row.maxScore),
+            });
           }
         });
-        
+
         setCompletedSubmissions(completed);
       } catch {
         // ไม่ต้องทำอะไร ถ้าดึงข้อมูลไม่ได้
@@ -105,7 +112,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
     return () => {
       alive = false;
     };
-  }, [config.key]);
+  }, [config.key, selectedJudge]);
 
   useEffect(() => {
     let alive = true;
@@ -144,13 +151,25 @@ export default function CategoryAssessmentClient({ config }: Props) {
   const progress = (step / (totalSteps - 1)) * 100;
 
   const handleScoreChange = (qId: string, val: string, max: number) => {
-    const numVal = Math.min(Math.max(0, Number.parseFloat(val) || 0), max);
-    setScores((prev) => ({ ...prev, [qId]: numVal }));
+    // อนุญาตให้เป็นค่าว่างหรือตัวเลขทศนิยม
+    if (val === "") {
+      setScores((prev) => ({ ...prev, [qId]: 0 }));
+      return;
+    }
+    
+    const numVal = Number.parseFloat(val);
+    if (!Number.isNaN(numVal)) {
+      // จำกัดค่าระหว่าง 0 ถึง max
+      const clampedVal = Math.min(Math.max(0, numVal), max);
+      setScores((prev) => ({ ...prev, [qId]: clampedVal }));
+    }
   };
 
   const calculateTopicTotal = (topicIndex: number) => {
     const topic = config.topics[topicIndex];
-    return topic.questions.reduce((sum, q) => sum + (scores[q.id] || 0), 0);
+    const total = topic.questions.reduce((sum, q) => sum + (scores[q.id] || 0), 0);
+    // ปัดเศษเป็น 2 ตำแหน่ง
+    return Math.round(total * 100) / 100;
   };
 
   const calculateTopicMax = (topicIndex: number) => {
@@ -173,7 +192,9 @@ export default function CategoryAssessmentClient({ config }: Props) {
   };
 
   const grandTotal = useMemo(() => {
-    return Object.values(scores).reduce((sum, val) => sum + (Number(val) || 0), 0);
+    const total = Object.values(scores).reduce((sum, val) => sum + (Number(val) || 0), 0);
+    // ปัดเศษเป็น 2 ตำแหน่ง
+    return Math.round(total * 100) / 100;
   }, [scores]);
 
   const handleSubmit = async () => {
@@ -219,9 +240,13 @@ export default function CategoryAssessmentClient({ config }: Props) {
       }
 
       setSubmitMessage("บันทึกข้อมูลสำเร็จแล้ว");
-      // เพิ่มนักศึกษาคนนี้ในรายการที่ประเมินเรียบร้อยแล้ว
+      // เพิ่มนักศึกษาคนนี้ในรายการที่ประเมินเรียบร้อยแล้ว พร้อมเก็บคะแนน
       if (selectedStudent) {
-        setCompletedSubmissions(prev => new Set([...prev, selectedStudent.id]));
+        setCompletedSubmissions(prev => {
+          const next = new Map(prev);
+          next.set(selectedStudent.id, { total: grandTotal, max: maxScore });
+          return next;
+        });
       }
       setStep(0);
       setScores({});
@@ -391,101 +416,106 @@ export default function CategoryAssessmentClient({ config }: Props) {
             ) : students.length === 0 ? (
               <div className="bg-white rounded-3xl p-8 shadow-sm text-[#191c1d]/60">ไม่พบรายชื่อนักศึกษาในประเภทนี้</div>
             ) : (
-              <div className="space-y-6">
-                {students.map((s) =>
-                  completedSubmissions.has(s.id) ? (
-                    <div
+              <div className="space-y-4">
+                {students.map((s) => {
+                  const isCompleted = completedSubmissions.has(s.id);
+                  const submissionInfo = completedSubmissions.get(s.id);
+                  return (
+                    <button
                       key={s.id}
-                      className="w-full text-left p-4 sm:p-6 md:p-8 rounded-[1.2rem] md:rounded-[1.5rem] transition-all group relative overflow-hidden bg-gray-50 border border-gray-200 opacity-75"
+                      onClick={() => {
+                        if (!isCompleted) {
+                          setSelectedStudent(s);
+                          setStep(topicStartStep);
+                        }
+                      }}
+                      disabled={isCompleted}
+                      className={`w-full text-left p-5 rounded-2xl transition-all group relative overflow-hidden flex items-start gap-4 ${
+                        isCompleted
+                          ? "bg-gray-50 border border-gray-200 opacity-60 cursor-not-allowed"
+                          : "bg-white border border-gray-200 hover:border-[#5f00e3]/30 hover:shadow-lg cursor-pointer"
+                      }`}
                     >
-                      <div className="space-y-4 relative z-10">
-                        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                          <span
-                            className="text-[10px] uppercase font-black px-2 py-0.5 rounded tracking-tighter w-fit bg-gray-300 text-gray-700"
-                          >
+                      {/* Left: Student Info */}
+                      <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded tracking-tighter ${
+                            isCompleted ? "bg-gray-300 text-gray-600" : "bg-[#191c1d] text-white"
+                          }`}>
                             ID {s.id}
                           </span>
-                          <div className="flex items-center gap-2">
-                            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-600">{s.name}</h2>
-                            <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">
-                              ประเมินเรียบร้อยแล้ว
-                            </span>
-                          </div>
+                          <h2 className={`text-lg font-bold tracking-tight ${isCompleted ? "text-gray-500" : "text-[#191c1d]"}`}>
+                            {s.name}
+                          </h2>
                         </div>
-                        <div className="grid md:grid-cols-2 gap-5">
-                          <div className="flex items-start gap-3">
-                            <BookOpen size={18} className="mt-1 opacity-40 shrink-0" />
-                            <div>
-                              <div className="text-[10px] font-bold uppercase opacity-40 tracking-widest">หลักสูตร / สำนักวิชา</div>
-                              <div className="text-sm font-medium text-gray-600">{s.program} · {s.school}</div>
-                            </div>
-                          </div>
-                          <div className="flex items-start gap-3">
-                            <Building2 size={18} className="mt-1 opacity-40 shrink-0" />
-                            <div>
-                              <div className="text-[10px] font-bold uppercase opacity-40 tracking-widest">หน่วยงาน / หัวข้อโครงงาน</div>
-                              <div className="text-sm font-medium text-gray-600">{s.workplace}</div>
-                              <div className="text-sm italic opacity-60 leading-relaxed mt-1 text-gray-500">{s.project}</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                ) : (
-                  <button
-                    key={s.id}
-                    onClick={() => {
-                      setSelectedStudent(s);
-                      setStep(topicStartStep);
-                    }}
-                    className={`w-full text-left p-4 sm:p-6 md:p-8 rounded-[1.2rem] md:rounded-[1.5rem] transition-all group relative overflow-hidden ${
-                      selectedStudent?.id === s.id ? "bg-[#5f00e3] text-white shadow-xl" : "bg-white shadow-sm hover:shadow-xl"
-                    }`}
-                  >
-                    <div className="space-y-4 relative z-10">
-                      <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                        <span
-                          className={`text-[10px] uppercase font-black px-2 py-0.5 rounded tracking-tighter w-fit ${
-                            selectedStudent?.id === s.id ? "bg-white text-[#5f00e3]" : "bg-[#191c1d] text-white"
-                          }`}
-                        >
-                          ID {s.id}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">{s.name}</h2>
-                          {completedSubmissions.has(s.id) && (
-                            <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">
-                              ประเมินเรียบร้อยแล้ว
-                            </span>
-                          )}
-                        </div>
-                      </div>
 
-                      <div className="grid md:grid-cols-2 gap-5">
-                        <div className="flex items-start gap-3">
-                          <BookOpen size={18} className="mt-1 opacity-40 shrink-0" />
-                          <div>
-                            <div className="text-[10px] font-bold uppercase opacity-40 tracking-widest">หลักสูตร / สำนักวิชา</div>
-                            <div className="text-sm font-medium">{s.program} · {s.school}</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                          <div className="flex items-start gap-2">
+                            <BookOpen size={14} className={`mt-0.5 shrink-0 ${isCompleted ? "text-gray-400" : "text-gray-500"}`} />
+                            <div className="min-w-0">
+                              <div className={`text-[9px] font-bold uppercase tracking-wider ${isCompleted ? "text-gray-400" : "text-gray-500"}`}>
+                                หลักสูตร / สำนักวิชา
+                              </div>
+                              <div className={`font-medium truncate ${isCompleted ? "text-gray-500" : "text-gray-700"}`}>
+                                {s.program} · {s.school}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2">
+                            <Building2 size={14} className={`mt-0.5 shrink-0 ${isCompleted ? "text-gray-400" : "text-gray-500"}`} />
+                            <div className="min-w-0">
+                              <div className={`text-[9px] font-bold uppercase tracking-wider ${isCompleted ? "text-gray-400" : "text-gray-500"}`}>
+                                หน่วยงานที่ปฏิบัติสหกิจ
+                              </div>
+                              <div className={`font-medium truncate ${isCompleted ? "text-gray-500" : "text-gray-700"}`}>
+                                {s.workplace}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-start gap-3">
-                          <Building2 size={18} className="mt-1 opacity-40 shrink-0" />
-                          <div>
-                            <div className="text-[10px] font-bold uppercase opacity-40 tracking-widest">หน่วยงานที่ปฏิบัติสหกิจ</div>
-                            <div className="text-sm font-medium">{s.workplace}</div>
+
+                        <div>
+                          <div className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${isCompleted ? "text-gray-400" : "text-gray-500"}`}>
+                            หัวข้อโครงงาน
+                          </div>
+                          <div className={`text-sm italic leading-relaxed line-clamp-2 ${isCompleted ? "text-gray-500" : "text-gray-600"}`}>
+                            {s.project}
                           </div>
                         </div>
                       </div>
 
-                      <div>
-                        <div className="text-[10px] font-bold uppercase opacity-40 tracking-widest">หัวข้อโครงงาน</div>
-                        <div className="text-sm italic opacity-80 leading-relaxed">{s.project}</div>
+                      {/* Right: Status */}
+                      <div className="flex-shrink-0 text-right">
+                        {isCompleted ? (
+                          <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 min-w-[120px]">
+                            <div className="text-[9px] font-bold uppercase tracking-wider text-green-600 mb-1">
+                              ประเมินแล้ว
+                            </div>
+                            <div className="text-2xl font-bold text-green-600">
+                              {submissionInfo ? submissionInfo.total.toFixed(2) : "✓"}
+                            </div>
+                            <div className="text-[10px] text-green-500 mt-1">
+                              / {submissionInfo?.max ?? 100}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 min-w-[120px]">
+                            <div className="text-[9px] font-bold uppercase tracking-wider text-orange-600 mb-1">
+                              ยังไม่ประเมิน
+                            </div>
+                            <div className="text-2xl font-bold text-orange-600">
+                              --
+                            </div>
+                            <div className="text-[10px] text-orange-500 mt-1">
+                              / 100
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  </button>
-                  )
-                )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -509,7 +539,7 @@ export default function CategoryAssessmentClient({ config }: Props) {
                 const description = parts.slice(1).join('').trim();
                 return (
                   <>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-r from-[#191c1d] to-[#5f00e3] bg-clip-text text-transparent max-w-4xl mx-auto leading-tight">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-[#191c1d] to-[#5f00e3] bg-clip-text text-transparent max-w-4xl mx-auto leading-tight">
                       {summary}
                     </h1>
                     {description && (
@@ -573,43 +603,31 @@ export default function CategoryAssessmentClient({ config }: Props) {
                           </label>
                           <div className="relative">
                             <input
-                              type="text"
-                              inputMode="decimal"
-                              pattern="[0-9]*\.?[0-9]{0,2}"
+                              type="number"
+                              step="0.01"
                               min="0"
                               max={q.max}
-                              step="0.01"
-                              placeholder="0"
-                              value={scores[q.id] ?? ""}
+                              placeholder="0.00"
+                              value={scores[q.id] !== undefined ? scores[q.id] : ""}
                               onChange={(e) => {
-                                const target = e.target as HTMLInputElement;
-                                let value = target.value;
+                                const value = e.target.value;
                                 
-                                // อนุญาตเฉพาะตัวเลขและจุดทศนิยม
-                                const cleanValue = value.replace(/[^0-9.]/g, '');
-                                
-                                // จำกัดจุดทศนิยมไว้แค่จุดเดียว
-                                const parts = cleanValue.split('.');
-                                let finalValue = parts[0];
-                                
-                                // เพิ่มทศนิยมถ้ามี และจำกัด 2 ตำแหน่ง
-                                if (parts.length > 1 && parts[1] !== undefined) {
-                                  finalValue += '.' + parts[1].slice(0, 2);
+                                // ถ้าเป็นค่าว่าง ให้เคลียร์
+                                if (value === '') {
+                                  handleScoreChange(q.id, '', q.max);
+                                  return;
                                 }
                                 
-                                // ไม่ให้ขึ้นต้นด้วยจุดทศนิยม
-                                if (finalValue.startsWith('.')) {
-                                  finalValue = '0' + finalValue;
-                                }
+                                // แปลงเป็นตัวเลข
+                                const numValue = parseFloat(value);
                                 
-                                target.value = finalValue;
-                                handleScoreChange(q.id, finalValue, q.max);
-                              }}
-                              onKeyPress={(e) => {
-                                const char = e.key;
-                                // อนุญาตเฉพาะตัวเลข และจุดทศนิยม
-                                if (!/[0-9.]/.test(char)) {
-                                  e.preventDefault();
+                                // ตรวจสอบว่าเป็นตัวเลขที่ถูกต้อง
+                                if (!isNaN(numValue)) {
+                                  // จำกัดทศนิยม 2 ตำแหน่ง
+                                  const rounded = Math.round(numValue * 100) / 100;
+                                  handleScoreChange(q.id, rounded.toString(), q.max);
+                                } else {
+                                  handleScoreChange(q.id, value, q.max);
                                 }
                               }}
                               className="w-24 h-14 text-xl font-bold bg-white border-2 border-gray-200 rounded-xl focus:border-[#5f00e3] focus:ring-2 focus:ring-[#5f00e3]/20 transition-all outline-none text-center"
