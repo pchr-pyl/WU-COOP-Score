@@ -165,8 +165,9 @@ export default function JudgeSummaryClient() {
               {judge ? <p className="text-sm text-[#191c1d]/55 mt-1">{judge.name} · {judge.dept}</p> : <p className="text-sm text-[#191c1d]/55 mt-1">กรุณาเข้าสู่ระบบจากหน้าแรกก่อน</p>}
             </div>
             <div className="flex gap-2 sm:flex-row flex-col w-full sm:w-auto">
-              <Link href="/" className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white shadow-sm text-sm font-medium hover:bg-[#f3f4f5] transition-colors">
-                <Home size={15} /> หน้าหลัก
+              <Link href="/" className="flex flex-col items-center justify-center px-3 py-2 rounded-xl bg-white shadow-sm text-xs font-medium hover:bg-[#f3f4f5] transition-colors min-w-[60px]">
+                <Home size={16} />
+                <span className="mt-0.5">หน้าหลัก</span>
               </Link>
               <button onClick={() => void fetchData()} disabled={loading} className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-[#9f4200] to-[#fe6c00] text-white text-sm font-medium disabled:opacity-60 hover:opacity-90 transition-opacity">
                 <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> รีเฟรช
@@ -185,33 +186,33 @@ export default function JudgeSummaryClient() {
 
         {judge && (
           <>
-            <section className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)] flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0"><ClipboardList size={22} className="text-[#9f4200]" /></div>
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">จำนวนครั้งที่ประเมิน</p>
-                  <p className="text-2xl font-bold tracking-tight">{rows.length}</p>
+            <section className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+              <div className="bg-white rounded-xl px-3 py-3 sm:px-4 sm:py-4 shadow-[0_4px_12px_rgba(25,28,29,0.06)] flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0"><ClipboardList size={16} className="text-[#9f4200]" /></div>
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">จำนวนครั้งที่ประเมิน</p>
+                  <p className="text-lg sm:text-2xl font-bold tracking-tight">{rows.length}</p>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)] flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0"><UserRound size={22} className="text-[#9f4200]" /></div>
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">นักศึกษาที่ประเมินแล้ว</p>
-                  <p className="text-2xl font-bold tracking-tight">{uniqueStudents.size}</p>
+              <div className="bg-white rounded-xl px-3 py-3 sm:px-4 sm:py-4 shadow-[0_4px_12px_rgba(25,28,29,0.06)] flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0"><UserRound size={16} className="text-[#9f4200]" /></div>
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">นักศึกษาที่ประเมินแล้ว</p>
+                  <p className="text-lg sm:text-2xl font-bold tracking-tight">{uniqueStudents.size}</p>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)] flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0"><Users size={22} className="text-[#5f00e3]" /></div>
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">กรรมการร่วมประเมิน</p>
-                  <p className="text-2xl font-bold tracking-tight">{allJudgesCount}</p>
+              <div className="bg-white rounded-xl px-3 py-3 sm:px-4 sm:py-4 shadow-[0_4px_12px_rgba(25,28,29,0.06)] flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0"><Users size={16} className="text-[#5f00e3]" /></div>
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">กรรมการร่วมประเมิน</p>
+                  <p className="text-lg sm:text-2xl font-bold tracking-tight">{allJudgesCount}</p>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl px-5 py-5 shadow-[0_8px_24px_rgba(25,28,29,0.06)] flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0"><ClipboardList size={22} className="text-[#9f4200]" /></div>
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">คะแนนเฉลี่ยต่อคน</p>
-                  <p className="text-2xl font-bold tracking-tight">{averageScore.toFixed(2)}</p>
+              <div className="bg-white rounded-xl px-3 py-3 sm:px-4 sm:py-4 shadow-[0_4px_12px_rgba(25,28,29,0.06)] flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#f3f4f5] flex items-center justify-center shrink-0"><ClipboardList size={16} className="text-[#9f4200]" /></div>
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-xs uppercase tracking-widest text-[#191c1d]/45 font-semibold">คะแนนเฉลี่ยต่อคน</p>
+                  <p className="text-lg sm:text-2xl font-bold tracking-tight">{averageScore.toFixed(2)}</p>
                 </div>
               </div>
             </section>
