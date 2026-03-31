@@ -370,7 +370,9 @@ export default function JudgeSummaryClient() {
                     const topicScores = topicQuestions.map(q => ({
                       id: q.id,
                       text: q.text,
-                      score: selectedStudentDetails.scores[q.id] as number,
+                      score: isEditMode
+                        ? (parseFloat(editScores[q.id] ?? String(selectedStudentDetails.scores[q.id])) || 0)
+                        : selectedStudentDetails.scores[q.id] as number,
                       max: q.max
                     }));
                     

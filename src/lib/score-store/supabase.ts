@@ -213,7 +213,18 @@ export async function fetchDashboardData(tableName: string = 'score_submissions'
 
   const rows = rowData.map((record: SubmissionRecord) => mapSubmissionRecord(record));
   const fallback = buildDashboardData(rows);
-  const byStudent = studentData.map((record: StudentSummaryRecord) => mapStudentSummaryRecord(record));
+  // Deduplicate byStudent — keep one record per studentId+category (highest judgeCount wins)
+  const studentMap = new Map<string, StudentSummaryRecord>();
+  for (const record of studentData) {
+    const key = `${record.student_id ?? ""}::${record.category ?? ""}`;
+    const existing = studentMap.get(key);
+    if (!existing || Number(record.judge_count ?? 0) > Number(existing.judge_count ?? 0)) {
+      studentMap.set(key, record);
+    }
+  }
+  const byStudent = Array.from(studentMap.values())
+    .map((record) => mapStudentSummaryRecord(record))
+    .sort((a, b) => b.avgPct - a.avgPct);
 
   const byCategory = categoryData.reduce<DashboardData["byCategory"]>((acc, record) => {
     const category = record.category ?? "";
