@@ -539,11 +539,11 @@ export default function CategoryAssessmentClient({ config }: Props) {
                 const description = parts.slice(1).join('').trim();
                 return (
                   <>
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-[#191c1d] to-[#5f00e3] bg-clip-text text-transparent max-w-4xl mx-auto leading-tight">
+                    <h1 className="text-base sm:text-lg md:text-xl font-bold tracking-tight bg-gradient-to-r from-[#191c1d] to-[#5f00e3] bg-clip-text text-transparent max-w-4xl mx-auto leading-tight">
                       {summary}
                     </h1>
                     {description && (
-                      <div className="text-base md:text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200">
+                      <div className="text-sm md:text-base text-gray-600 max-w-4xl mx-auto leading-relaxed bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200">
                         {description}
                       </div>
                     )}
@@ -603,31 +603,26 @@ export default function CategoryAssessmentClient({ config }: Props) {
                           </label>
                           <div className="relative">
                             <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              max={q.max}
+                              type="text"
+                              inputMode="decimal"
                               placeholder="0.00"
-                              value={scores[q.id] !== undefined ? scores[q.id] : ""}
+                              value={scores[q.id] !== undefined && scores[q.id] !== 0 ? scores[q.id] : ""}
                               onChange={(e) => {
                                 const value = e.target.value;
-                                
-                                // ถ้าเป็นค่าว่าง ให้เคลียร์
                                 if (value === '') {
                                   handleScoreChange(q.id, '', q.max);
                                   return;
                                 }
-                                
-                                // แปลงเป็นตัวเลข
-                                const numValue = parseFloat(value);
-                                
-                                // ตรวจสอบว่าเป็นตัวเลขที่ถูกต้อง
-                                if (!isNaN(numValue)) {
-                                  // จำกัดทศนิยม 2 ตำแหน่ง
-                                  const rounded = Math.round(numValue * 100) / 100;
-                                  handleScoreChange(q.id, rounded.toString(), q.max);
-                                } else {
-                                  handleScoreChange(q.id, value, q.max);
+                                const clean = value.replace(/[^0-9.]/g, '');
+                                const parts = clean.split('.');
+                                let final = parts[0];
+                                if (parts.length > 1) final += '.' + parts[1].slice(0, 2);
+                                if (final.startsWith('.')) final = '0' + final;
+                                handleScoreChange(q.id, final, q.max);
+                              }}
+                              onKeyDown={(e) => {
+                                if (!/[0-9.]|Backspace|Delete|ArrowLeft|ArrowRight|Tab/.test(e.key)) {
+                                  e.preventDefault();
                                 }
                               }}
                               className="w-24 h-14 text-xl font-bold bg-white border-2 border-gray-200 rounded-xl focus:border-[#5f00e3] focus:ring-2 focus:ring-[#5f00e3]/20 transition-all outline-none text-center"

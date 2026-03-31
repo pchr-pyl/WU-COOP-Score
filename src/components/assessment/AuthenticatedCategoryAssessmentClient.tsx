@@ -50,6 +50,7 @@ export default function AuthenticatedCategoryAssessmentClient({ config }: Props)
   const [scores, setScores] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [completedSubmissions, setCompletedSubmissions] = useState<Map<string, { total: number; max: number }>>(new Map());
 
   useEffect(() => {
     const stored = window.localStorage.getItem(JUDGE_SESSION_STORAGE_KEY);
@@ -92,6 +93,34 @@ export default function AuthenticatedCategoryAssessmentClient({ config }: Props)
       alive = false;
     };
   }, [config.key]);
+
+  // ดึงข้อมูลการประเมินของกรรมการคนนี้จาก dashboard
+  useEffect(() => {
+    if (!activeJudge) return;
+    let alive = true;
+    const run = async () => {
+      try {
+        const res = await fetch("/api/dashboard");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!alive) return;
+        const completed = new Map<string, { total: number; max: number }>();
+        data.rows?.forEach((row: any) => {
+          if (row.category === config.key && row.judgeId === activeJudge.id) {
+            completed.set(row.studentId, {
+              total: Number(row.totalScore),
+              max: Number(row.maxScore),
+            });
+          }
+        });
+        setCompletedSubmissions(completed);
+      } catch {
+        // ไม่ต้องทำอะไร
+      }
+    };
+    run();
+    return () => { alive = false; };
+  }, [config.key, activeJudge]);
 
   const totalSteps = config.topics.length + 2;
   const summaryStep = totalSteps - 1;
@@ -299,18 +328,21 @@ export default function AuthenticatedCategoryAssessmentClient({ config }: Props)
               <div className="bg-white rounded-3xl p-8 shadow-sm text-[#191c1d]/60">ไม่พบรายชื่อนักศึกษาในประเภทนี้</div>
             ) : (
               <div className="space-y-6">
-                {students.map((student) => (
+                {students.map((student) => {
+                  const isCompleted = completedSubmissions.has(student.id);
+                  const submissionInfo = completedSubmissions.get(student.id);
+                  return (
                   <button
                     key={student.id}
                     onClick={() => {
                       setSelectedStudent(student);
                       setStep(topicStartStep);
                     }}
-                    className={`w-full text-left p-4 sm:p-6 md:p-8 rounded-[1.2rem] md:rounded-[1.5rem] transition-all group relative overflow-hidden ${
+                    className={`w-full text-left p-4 sm:p-6 md:p-8 rounded-[1.2rem] md:rounded-[1.5rem] transition-all group relative overflow-hidden flex items-start gap-4 ${
                       selectedStudent?.id === student.id ? "bg-[#5f00e3] text-white shadow-xl" : "bg-white shadow-sm hover:shadow-xl"
                     }`}
                   >
-                    <div className="space-y-4 relative z-10">
+                    <div className="space-y-4 relative z-10 flex-1 min-w-0">
                       <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                         <span
                           className={`text-[10px] uppercase font-black px-2 py-0.5 rounded tracking-tighter w-fit ${
@@ -344,8 +376,28 @@ export default function AuthenticatedCategoryAssessmentClient({ config }: Props)
                         <div className="text-sm italic opacity-80 leading-relaxed">{student.project}</div>
                       </div>
                     </div>
+
+                    {/* Status badge */}
+                    <div className="flex-shrink-0 text-right">
+                      {isCompleted ? (
+                        <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 min-w-[110px]">
+                          <div className="text-[9px] font-bold uppercase tracking-wider text-green-600 mb-1">ประเมินแล้ว</div>
+                          <div className="text-2xl font-bold text-green-600">
+                            {submissionInfo ? submissionInfo.total.toFixed(2) : "✓"}
+                          </div>
+                          <div className="text-[10px] text-green-500 mt-0.5">/ {submissionInfo?.max ?? 100}</div>
+                        </div>
+                      ) : (
+                        <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 min-w-[110px]">
+                          <div className="text-[9px] font-bold uppercase tracking-wider text-orange-500 mb-1">ยังไม่ได้ประเมิน</div>
+                          <div className="text-2xl font-bold text-orange-400">--</div>
+                          <div className="text-[10px] text-orange-400 mt-0.5">/ 100</div>
+                        </div>
+                      )}
+                    </div>
                   </button>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
