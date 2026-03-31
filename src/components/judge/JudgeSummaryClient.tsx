@@ -158,21 +158,21 @@ export default function JudgeSummaryClient() {
       <div className="fixed top-0 left-0 h-1 w-full bg-gradient-to-r from-[#9f4200] to-[#fe6c00] z-50" />
       <div className="sticky top-0 bg-[#f8f9fa] z-20 px-4 py-4 backdrop-blur-sm border-b border-gray-200">
         <div className="mx-auto max-w-6xl">
-          <header className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.22em] text-[#5f00e3]/60 font-semibold">WU COOP SCORE 2026</p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">สรุปผลการประเมินรายอาจารย์</h1>
-            {judge ? <p className="text-sm text-[#191c1d]/55 mt-1">{judge.name} · {judge.dept}</p> : <p className="text-sm text-[#191c1d]/55 mt-1">กรุณาเข้าสู่ระบบจากหน้าแรกก่อน</p>}
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <Link href="/" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white shadow-sm text-sm font-medium hover:bg-[#f3f4f5] transition-colors">
-              <Home size={15} /> หน้าหลัก
-            </Link>
-            <button onClick={() => void fetchData()} disabled={loading} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-[#9f4200] to-[#fe6c00] text-white text-sm font-medium disabled:opacity-60 hover:opacity-90 transition-opacity">
-              <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> รีเฟรช
-            </button>
-          </div>
-        </header>
+          <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-[#5f00e3]/60 font-semibold">WU COOP SCORE 2026</p>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">สรุปผลการประเมินรายอาจารย์</h1>
+              {judge ? <p className="text-sm text-[#191c1d]/55 mt-1">{judge.name} · {judge.dept}</p> : <p className="text-sm text-[#191c1d]/55 mt-1">กรุณาเข้าสู่ระบบจากหน้าแรกก่อน</p>}
+            </div>
+            <div className="flex gap-2 sm:flex-row flex-col w-full sm:w-auto">
+              <Link href="/" className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white shadow-sm text-sm font-medium hover:bg-[#f3f4f5] transition-colors">
+                <Home size={15} /> หน้าหลัก
+              </Link>
+              <button onClick={() => void fetchData()} disabled={loading} className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-[#9f4200] to-[#fe6c00] text-white text-sm font-medium disabled:opacity-60 hover:opacity-90 transition-opacity">
+                <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> รีเฟรช
+              </button>
+            </div>
+          </header>
         </div>
       </div>
 
