@@ -59,6 +59,10 @@ export default function JudgeSummaryClient() {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [selectedStudentDetails, setSelectedStudentDetails] = useState<any>(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editScores, setEditScores] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   // ESC key handler
   useEffect(() => {
@@ -71,6 +75,62 @@ export default function JudgeSummaryClient() {
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, [showPopup]);
+
+  const handleSaveScores = async () => {
+    if (!judge || !selectedStudentDetails) return;
+    setIsSaving(true);
+    setSaveMessage(null);
+    try {
+      const categoryConfig = CATEGORY_CONFIG[selectedStudentDetails.category as keyof typeof CATEGORY_CONFIG];
+      const allQuestions = categoryConfig?.topics.flatMap(t => t.questions) ?? [];
+      
+      // สร้าง scores object ใหม่
+      const newScores: Record<string, number> = { ...selectedStudentDetails.scores };
+      let totalScore = 0;
+      let maxScore = 0;
+      for (const q of allQuestions) {
+        if (editScores[q.id] !== undefined) {
+          newScores[q.id] = parseFloat(editScores[q.id]) || 0;
+        }
+        totalScore += newScores[q.id] ?? 0;
+        maxScore += q.max;
+      }
+
+      const res = await fetch('/api/dashboard', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          judgeId: judge.id,
+          studentId: selectedStudentDetails.student_id,
+          category: selectedStudentDetails.category,
+          scores: newScores,
+          totalScore,
+          maxScore,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? 'บันทึกไม่สำเร็จ');
+      }
+
+      // อัพเดต local state
+      setSelectedStudentDetails((prev: any) => ({ ...prev, scores: newScores }));
+      setDetailedScores(prev => prev.map((s: any) =>
+        s.student_id === selectedStudentDetails.student_id && s.category === selectedStudentDetails.category
+          ? { ...s, scores: newScores }
+          : s
+      ));
+      setSaveMessage('บันทึกคะแนนเรียบร้อยแล้ว');
+      setIsEditMode(false);
+      // refresh dashboard data
+      void fetchData();
+    } catch (err) {
+      setSaveMessage(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const fetchDetailedScores = async () => {
     if (!judge) return;
@@ -220,7 +280,7 @@ export default function JudgeSummaryClient() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-gray-200">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-200">
+            <div className="sticky top-0 bg-white rounded-t-3xl flex items-center justify-between mb-8 pb-6 border-b border-gray-200 z-10">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-[#5f00e3]/10 to-[#7b3ff2]/10 rounded-xl flex items-center justify-center">
                   <span className="text-lg font-bold text-[#5f00e3]">{selectedStudentDetails.student_name.charAt(0)}</span>
@@ -230,13 +290,55 @@ export default function JudgeSummaryClient() {
                   <p className="text-sm text-gray-600">{selectedStudentDetails.student_id} • {selectedStudentDetails.category}</p>
                 </div>
               </div>
-              <button
-                onClick={() => setShowPopup(false)}
-                className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all hover:scale-110"
-              >
-                <span className="text-gray-600 text-lg">×</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {!isEditMode ? (
+                  <button
+                    onClick={() => {
+                      setIsEditMode(true);
+                      setSaveMessage(null);
+                      // โหลดคะแนนปัจจุบันเข้า editScores
+                      const init: Record<string, string> = {};
+                      Object.entries(selectedStudentDetails.scores as Record<string, number>).forEach(([k, v]) => {
+                        init[k] = String(v);
+                      });
+                      setEditScores(init);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-[#5f00e3] to-[#7b3ff2] text-white text-sm font-medium hover:opacity-90 transition-all"
+                  >
+                    ✏️ แก้ไขคะแนน
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setIsEditMode(false); setSaveMessage(null); }}
+                      className="px-4 py-2 rounded-xl bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200 transition-all"
+                    >
+                      ยกเลิก
+                    </button>
+                    <button
+                      onClick={handleSaveScores}
+                      disabled={isSaving}
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-br from-[#9f4200] to-[#fe6c00] text-white text-sm font-medium disabled:opacity-60 hover:opacity-90 transition-all"
+                    >
+                      {isSaving ? '⏳ กำลังบันทึก...' : '💾 บันทึก'}
+                    </button>
+                  </div>
+                )}
+                <button
+                  onClick={() => { setShowPopup(false); setIsEditMode(false); setSaveMessage(null); }}
+                  className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all hover:scale-110"
+                >
+                  <span className="text-gray-600 text-lg">×</span>
+                </button>
+              </div>
             </div>
+
+            {/* Save message */}
+            {saveMessage && (
+              <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium ${saveMessage.includes('เรียบร้อย') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                {saveMessage}
+              </div>
+            )}
 
             {/* Score Summary */}
             <div className="mb-6">
@@ -296,13 +398,14 @@ export default function JudgeSummaryClient() {
                         {/* Questions */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {topicScores.map((item) => {
-                            // แยกหัวข้อและรายละเอียด
                             const parts = item.text.split(/ มีการ| โดย| และ| ทั้ง| อันเนื่องมาจาก| ที่นำไป| ซึ่ง| ผู้มี| 1\)|2\)/);
                             const questionText = parts[0]?.trim() || item.text;
-                            const percentage = item.max > 0 ? (item.score / item.max) * 100 : 0;
-                            
+                            const currentScore = isEditMode
+                              ? (editScores[item.id] ?? String(item.score))
+                              : item.score;
+
                             return (
-                              <div key={item.id} className="bg-white rounded-xl p-4 border border-gray-100">
+                              <div key={item.id} className={`bg-white rounded-xl p-4 border transition-all ${isEditMode ? 'border-[#5f00e3]/30 ring-1 ring-[#5f00e3]/10' : 'border-gray-100'}`}>
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
@@ -313,10 +416,32 @@ export default function JudgeSummaryClient() {
                                     </div>
                                   </div>
                                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                                    <div className="flex items-baseline gap-1">
-                                      <span className="text-lg font-bold text-[#9f4200]">{item.score}</span>
-                                      <span className="text-xs text-gray-400">/{item.max}</span>
-                                    </div>
+                                    {isEditMode ? (
+                                      <div className="flex items-center gap-1">
+                                        <input
+                                          type="text"
+                                          inputMode="decimal"
+                                          value={currentScore as string}
+                                          onChange={(e) => {
+                                            const val = e.target.value;
+                                            const clean = val.replace(/[^0-9.]/g, '');
+                                            const pts = clean.split('.');
+                                            let final = pts[0];
+                                            if (pts.length > 1) final += '.' + pts[1].slice(0, 2);
+                                            const num = parseFloat(final);
+                                            if (!isNaN(num) && num > item.max) return;
+                                            setEditScores(prev => ({ ...prev, [item.id]: final }));
+                                          }}
+                                          className="w-16 h-9 text-center text-base font-bold bg-[#f3f4f5] border-2 border-[#5f00e3]/30 rounded-lg focus:border-[#5f00e3] focus:outline-none focus:ring-2 focus:ring-[#5f00e3]/20 transition-all"
+                                        />
+                                        <span className="text-xs text-gray-400">/{item.max}</span>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-baseline gap-1">
+                                        <span className="text-lg font-bold text-[#9f4200]">{item.score}</span>
+                                        <span className="text-xs text-gray-400">/{item.max}</span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
